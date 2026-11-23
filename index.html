@@ -288,6 +288,11 @@ td.low, span.low { background: #ffdcdc; } td.mid, span.mid { background: #fff0c7
 
 #netNote.bad { color: #c73e3e; }
 
+.bdex { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:8px; margin-top:8px; }
+.bd { border:2px dashed #c9cde0; border-radius:12px; padding:8px 10px; display:flex; flex-direction:column; gap:2px; color:#8a8fa8; }
+.bd.got { border:2px solid #2b2d42; background:#fff8e1; color:#2b2d42; }
+.bd small { font-size:12px; } .bd .bh { color:#6b6f86; }
+
 </style>
 </head>
 <body>
@@ -769,19 +774,19 @@ var Q5 = (function () {
     return choice({ q: '원주를 알 때 지름을 구하는 식은?', correct: '(지름)=(원주)÷(원주율)', wrongs: ['(지름)=(원주)×(원주율)', '(지름)=(원주율)÷(원주)', '(지름)=(원주)÷2'], e: '(원주)=(지름)×(원주율)이므로 (지름)=(원주)÷(원주율)이에요.' });
   });
   def('4-cd', 4, 1, function () { var d = ri(2, 20); return num({ q: '지름이 ' + d + ' cm인 원의 원주는 몇 cm인가요? ' + PU, fig: cFig(d + ' cm', 'd'), ans: A(P(d)), unit: 'cm', e: '(원주)=(지름)×(원주율)=' + d + '×3.14=' + f(A(P(d))) + ' (cm)' }); });
-  def('4-wheel1', 4, 1, function () { var d = pick([40, 50, 60, 70, 80]); return num({ q: '자전거 바퀴의 지름이 ' + d + ' cm예요. 바퀴가 한 바퀴 굴러간 거리는 몇 cm인가요? ' + PU, ans: A(P(d)), unit: 'cm', e: '바퀴가 한 바퀴 굴러간 거리는 바퀴의 원주와 같아요. ' + d + '×3.14=' + f(A(P(d))) + ' (cm)' }); });
+  def('4-wheel1', 4, 1, function () { var d = 5 * ri(6, 18); return num({ q: pick(['자전거', '외발자전거', '유모차', '손수레']) + ' 바퀴의 지름이 ' + d + ' cm예요. 바퀴가 한 바퀴 굴러간 거리는 몇 cm인가요? ' + PU, ans: A(P(d)), unit: 'cm', e: '바퀴가 한 바퀴 굴러간 거리는 바퀴의 원주와 같아요. ' + d + '×3.14=' + f(A(P(d))) + ' (cm)' }); });
   def('4-cr', 4, 2, function () { var r = ri(2, 15); return num({ q: '반지름이 ' + r + ' cm인 원의 원주는 몇 cm인가요? ' + PU, fig: cFig(r + ' cm', 'r'), ans: A(P(2 * r)), unit: 'cm', e: '지름은 ' + r + '×2=' + (2 * r) + ' cm예요. (원주)=' + (2 * r) + '×3.14=' + f(A(P(2 * r))) + ' (cm). 반지름에 바로 3.14를 곱하지 않도록 주의해요!' }); });
   def('4-dc', 4, 2, function () { var d = ri(2, 30), C = A(P(d)); return num({ q: '원주가 ' + f(C) + ' cm인 원의 지름은 몇 cm인가요? ' + PU, fig: cFig(f(C) + ' cm', 'c'), ans: d, unit: 'cm', calc: true, e: '(지름)=(원주)÷(원주율)=' + f(C) + '÷3.14=' + d + ' (cm)' }); });
-  def('4-lake', 4, 2, function () { var d = pick([20, 30, 40, 50, 60, 100]), C = A(P(d)); return num({ q: '둘레가 ' + f(C) + ' m인 원 모양 호수의 중심을 지나는 다리가 있어요. 다리의 길이는 몇 m인가요? ' + PU, ans: d, unit: 'm', calc: true, e: '호수의 중심을 지나는 다리의 길이는 지름과 같아요. ' + f(C) + '÷3.14=' + d + ' (m)' }); });
+  def('4-lake', 4, 2, function () { var d = 10 * ri(2, 15), C = A(P(d)); return num({ q: '둘레가 ' + f(C) + ' m인 원 모양 호수의 중심을 지나는 다리가 있어요. 다리의 길이는 몇 m인가요? ' + PU, ans: d, unit: 'm', calc: true, e: '호수의 중심을 지나는 다리의 길이는 지름과 같아요. ' + f(C) + '÷3.14=' + d + ' (m)' }); });
   def('4-rc', 4, 3, function () { var r = ri(2, 15), C = A(P(2 * r)); return num({ q: '원주가 ' + f(C) + ' cm인 원의 반지름은 몇 cm인가요? ' + PU, fig: cFig(f(C) + ' cm', 'c'), ans: r, unit: 'cm', calc: true, e: '지름 = ' + f(C) + '÷3.14=' + (2 * r) + ' cm이고, 반지름은 지름의 반이므로 ' + (2 * r) + '÷2=' + r + ' (cm)' }); });
   def('4-hoop', 4, 3, function () { var d = pick([40, 48, 50, 60, 80]), n = ri(2, 6), cm = A(P(d)) * n; return num({ q: '지름이 ' + d + ' cm인 굴렁쇠를 ' + n + '바퀴 굴렸어요. 굴렁쇠가 굴러간 거리는 몇 m인가요? ' + PU, ans: Math.round(cm) / 100, unit: 'm', calc: true, e: '한 바퀴 = ' + d + '×3.14=' + f(A(P(d))) + ' cm, ' + n + '바퀴 = ' + f(A(P(d))) + '×' + n + '=' + f(cm) + ' cm = ' + f(Math.round(cm) / 100) + ' m (100 cm = 1 m)' }); });
-  def('4-strip', 4, 3, function () { var d = pick([10, 15, 20, 25, 30]), L = A(P(d)); return num({ q: '길이가 ' + f(L) + ' cm인 종이띠를 겹치지 않게 붙여 원을 만들었어요. 만든 원의 지름은 몇 cm인가요? ' + PU, ans: d, unit: 'cm', calc: true, e: '종이띠의 길이가 원주예요. (지름)=' + f(L) + '÷3.14=' + d + ' (cm)' }); });
+  def('4-strip', 4, 3, function () { var d = ri(6, 40), L = A(P(d)); return num({ q: '길이가 ' + f(L) + ' cm인 종이띠를 겹치지 않게 붙여 원을 만들었어요. 만든 원의 지름은 몇 cm인가요? ' + PU, ans: d, unit: 'cm', calc: true, e: '종이띠의 길이가 원주예요. (지름)=' + f(L) + '÷3.14=' + d + ' (cm)' }); });
 
   // ===== 5차시: 원의 넓이 어림하기 (교과서 108~109쪽) =====
   def('5-grid', 5, 1, function () { var r = pick([3, 4, 5, 6]), g = gridCount(r); return choice({ q: '반지름이 ' + r + ' cm인 원을 모눈종이에 그렸어요. 원 안쪽에 완전히 들어간 칸(보라)은 ' + g.inn + '칸, 원이 지나가는 칸까지 모두(보라+빨강) ' + g.out + '칸이에요. 원의 넓이를 바르게 어림한 것은?', fig: gridFig(r, 'both'), correct: g.inn + ' cm²보다 크고 ' + g.out + ' cm²보다 작아요', wrongs: [g.inn + ' cm²보다 작아요', g.out + ' cm²보다 커요', '정확히 ' + g.out + ' cm²예요'], e: '원의 넓이는 원 안쪽 모눈 ' + g.inn + '칸보다 넓고, 원이 걸친 칸까지 센 ' + g.out + '칸보다 좁아요. 그래서 ' + g.inn + ' cm² < (원의 넓이) < ' + g.out + ' cm²로 어림해요.' }); });
   def('5-times', 5, 1, function () { if (rnd() < 0.5) return choice({ q: '원 안의 초록색 정사각형의 넓이는 (반지름)×(반지름)인 정사각형 넓이의 몇 배인가요?', fig: sqInOut(0, 'in'), correct: '2배', wrongs: ['3배', '4배', '1배'], e: '초록색 정사각형의 대각선은 원의 지름이에요. 넓이 = 지름×지름÷2 = (반지름×2)×(반지름×2)÷2 = (반지름)×(반지름)×2예요.' }); return choice({ q: '원 밖의 보라색 정사각형의 넓이는 (반지름)×(반지름)인 정사각형 넓이의 몇 배인가요?', fig: sqInOut(0, 'out'), correct: '4배', wrongs: ['2배', '3배', '8배'], e: '보라색 정사각형의 한 변은 원의 지름(반지름×2)이에요. 넓이 = (반지름×2)×(반지름×2) = (반지름)×(반지름)×4예요.' }); });
-  def('5-out', 5, 1, function () { var r = ri(2, 10); return num({ q: '반지름이 ' + r + ' cm인 원을 꼭 맞게 둘러싼 보라색 정사각형의 넓이는 몇 cm²인가요?', fig: sqInOut(r, 'out'), ans: 4 * r * r, unit: 'cm²', e: '한 변이 지름 ' + (2 * r) + ' cm이므로 ' + (2 * r) + '×' + (2 * r) + '=' + (4 * r * r) + ' (cm²)' }); });
-  def('5-in', 5, 2, function () { var r = ri(2, 10); return num({ q: '반지름이 ' + r + ' cm인 원 안에 꼭 맞게 그린 초록색 정사각형의 넓이는 몇 cm²인가요?', fig: sqInOut(r, 'in'), ans: 2 * r * r, unit: 'cm²', e: '두 대각선이 모두 지름 ' + (2 * r) + ' cm예요. (마름모처럼) ' + (2 * r) + '×' + (2 * r) + '÷2=' + (2 * r * r) + ' (cm²)' }); });
+  def('5-out', 5, 1, function () { var r = ri(2, 15); return num({ q: '반지름이 ' + r + ' cm인 원을 꼭 맞게 둘러싼 보라색 정사각형의 넓이는 몇 cm²인가요?', fig: sqInOut(r, 'out'), ans: 4 * r * r, unit: 'cm²', e: '한 변이 지름 ' + (2 * r) + ' cm이므로 ' + (2 * r) + '×' + (2 * r) + '=' + (4 * r * r) + ' (cm²)' }); });
+  def('5-in', 5, 2, function () { var r = ri(2, 15); return num({ q: '반지름이 ' + r + ' cm인 원 안에 꼭 맞게 그린 초록색 정사각형의 넓이는 몇 cm²인가요?', fig: sqInOut(r, 'in'), ans: 2 * r * r, unit: 'cm²', e: '두 대각선이 모두 지름 ' + (2 * r) + ' cm예요. (마름모처럼) ' + (2 * r) + '×' + (2 * r) + '÷2=' + (2 * r * r) + ' (cm²)' }); });
   def('5-range', 5, 2, function () { var r = ri(2, 10); return choice({ q: '반지름이 ' + r + ' cm인 원의 넓이를 두 정사각형으로 어림한 것으로 알맞은 것은?', fig: sqInOut(r, 'both'), correct: (2 * r * r) + ' cm²보다 크고 ' + (4 * r * r) + ' cm²보다 작아요', wrongs: [(r * r) + ' cm²보다 크고 ' + (2 * r * r) + ' cm²보다 작아요', (4 * r * r) + ' cm²보다 크고 ' + (8 * r * r) + ' cm²보다 작아요', (2 * r) + ' cm²보다 크고 ' + (4 * r) + ' cm²보다 작아요'], e: '안쪽 정사각형 = ' + r + '×' + r + '×2=' + (2 * r * r) + ' cm², 바깥 정사각형 = ' + r + '×' + r + '×4=' + (4 * r * r) + ' cm²예요. 원의 넓이는 그 사이에 있어요.' }); });
   def('5-gridmeaning', 5, 2, function () { var r = pick([3, 4, 5, 6]), g = gridCount(r); return num({ q: '반지름이 ' + r + ' cm인 원이에요. 원 안쪽 칸이 ' + g.inn + '칸, 원이 지나가는 칸까지 ' + g.out + '칸일 때, 두 수의 가운데(평균)로 원의 넓이를 어림하면 몇 cm²인가요?', fig: gridFig(r, 'both'), ans: (g.inn + g.out) / 2, unit: 'cm²', e: '(' + g.inn + '+' + g.out + ')÷2=' + ((g.inn + g.out) / 2) + ' (cm²)로 어림할 수 있어요. 실제 넓이(' + r + '×' + r + '×3.14=' + f(A(P(r * r))) + ' cm²)와 꽤 가까워요.' }); });
   def('5-count', 5, 3, function () { var r = pick([3, 4]), g = gridCount(r); return num({ q: '반지름이 ' + r + ' cm인 원이에요. 원 안쪽에 완전히 들어간 모눈(색칠한 칸)은 몇 칸인가요?', fig: gridFig(r, 'in'), ans: g.inn, unit: '칸', e: '한 줄씩 세어 보면 모두 ' + g.inn + '칸이에요. 그래서 원의 넓이는 ' + g.inn + ' cm²보다 커요.' }); });
@@ -790,10 +795,10 @@ var Q5 = (function () {
   // ===== 6차시: 원의 넓이 구하기 (교과서 110~111쪽) =====
   def('6-formula', 6, 1, function () { return choice({ q: '(원의 넓이)를 구하는 식으로 알맞은 것은?', correct: '(반지름)×(반지름)×(원주율)', wrongs: ['(지름)×(지름)×(원주율)', '(반지름)×(원주율)', '(지름)×(원주율)'], e: '원을 한없이 잘라 이어 붙인 직사각형의 넓이 = (원주)×1/2×(반지름) = (반지름)×(반지름)×(원주율)이에요. (지름)×(원주율)은 원주예요.' }); });
   def('6-rect', 6, 1, function () { if (rnd() < 0.5) return choice({ q: '원을 한없이 잘라서 이어 붙여 만든 직사각형의 가로는 원의 무엇과 같나요?', correct: '(원주)×1/2', wrongs: ['(원주)', '(반지름)', '(지름)×2'], e: '원을 잘라 위아래로 번갈아 붙이면 원주의 반은 위쪽, 반은 아래쪽이 돼요. 그래서 가로 = (원주)×1/2예요.' }); return choice({ q: '원을 한없이 잘라서 이어 붙여 만든 직사각형의 세로는 원의 무엇과 같나요?', correct: '반지름', wrongs: ['지름', '원주', '(원주)×1/2'], e: '잘라 낸 조각의 길이가 반지름이라서 직사각형의 세로는 원의 반지름과 같아요.' }); });
-  def('6-ar', 6, 1, function () { var r = ri(1, 10); return num({ q: '반지름이 ' + r + ' cm인 원의 넓이는 몇 cm²인가요? ' + PU, fig: cFig(r + ' cm', 'r'), ans: A(P(r * r)), unit: 'cm²', e: '(원의 넓이)=(반지름)×(반지름)×(원주율)=' + r + '×' + r + '×3.14=' + f(A(P(r * r))) + ' (cm²)' }); });
+  def('6-ar', 6, 1, function () { var r = ri(1, 15); return num({ q: '반지름이 ' + r + ' cm인 원의 넓이는 몇 cm²인가요? ' + PU, fig: cFig(r + ' cm', 'r'), ans: A(P(r * r)), unit: 'cm²', e: '(원의 넓이)=(반지름)×(반지름)×(원주율)=' + r + '×' + r + '×3.14=' + f(A(P(r * r))) + ' (cm²)' }); });
   def('6-ad', 6, 2, function () { var r = ri(2, 12), d = 2 * r; return num({ q: '지름이 ' + d + ' cm인 원의 넓이는 몇 cm²인가요? ' + PU, fig: cFig(d + ' cm', 'd'), ans: A(P(r * r)), unit: 'cm²', e: '반지름 = ' + d + '÷2=' + r + ' cm. 넓이 = ' + r + '×' + r + '×3.14=' + f(A(P(r * r))) + ' (cm²). 지름을 그대로 두 번 곱하지 않도록 주의해요!' }); });
   def('6-rectnum', 6, 2, function () { var r = ri(2, 10); if (rnd() < 0.5) return num({ q: '반지름이 ' + r + ' cm인 원을 한없이 잘라 이어 붙여 직사각형을 만들었어요. 직사각형의 가로는 몇 cm인가요? ' + PU, ans: A(P(r)), unit: 'cm', e: '가로 = (원주)×1/2 = ' + (2 * r) + '×3.14÷2 = ' + r + '×3.14=' + f(A(P(r))) + ' (cm)' }); return num({ q: '반지름이 ' + r + ' cm인 원을 한없이 잘라 이어 붙여 만든 직사각형의 넓이는 몇 cm²인가요? ' + PU, ans: A(P(r * r)), unit: 'cm²', e: '가로 ' + r + '×3.14=' + f(A(P(r))) + ' cm, 세로 ' + r + ' cm → ' + f(A(P(r))) + '×' + r + '=' + f(A(P(r * r))) + ' (cm²). 원의 넓이와 같아요.' }); });
-  def('6-big', 6, 2, function () { var r = pick([11, 12, 15, 20]); return num({ q: '반지름이 ' + r + ' cm인 원 모양 방석의 넓이는 몇 cm²인가요? ' + PU, ans: A(P(r * r)), unit: 'cm²', e: r + '×' + r + '×3.14=' + (r * r) + '×3.14=' + f(A(P(r * r))) + ' (cm²)' }); });
+  def('6-big', 6, 2, function () { var r = ri(11, 25); return num({ q: '반지름이 ' + r + ' cm인 원 모양 방석의 넓이는 몇 cm²인가요? ' + PU, ans: A(P(r * r)), unit: 'cm²', e: r + '×' + r + '×3.14=' + (r * r) + '×3.14=' + f(A(P(r * r))) + ' (cm²)' }); });
   def('6-ac', 6, 3, function () { var r = ri(2, 10), C = A(P(2 * r)); return num({ q: '원주가 ' + f(C) + ' cm인 원의 넓이는 몇 cm²인가요? ' + PU, fig: cFig(f(C) + ' cm', 'c'), ans: A(P(r * r)), unit: 'cm²', calc: true, e: '지름 = ' + f(C) + '÷3.14=' + (2 * r) + ' cm, 반지름 = ' + r + ' cm. 넓이 = ' + r + '×' + r + '×3.14=' + f(A(P(r * r))) + ' (cm²)' }); });
   def('6-diff', 6, 3, function () { var a = ri(2, 8), b = a + ri(1, 4); return num({ q: '반지름이 ' + b + ' cm인 원은 반지름이 ' + a + ' cm인 원보다 넓이가 몇 cm² 더 넓은가요? ' + PU, ans: A(P(b * b - a * a)), unit: 'cm²', e: b + '×' + b + '×3.14=' + f(A(P(b * b))) + ', ' + a + '×' + a + '×3.14=' + f(A(P(a * a))) + ' → ' + f(A(P(b * b))) + '−' + f(A(P(a * a))) + '=' + f(A(P(b * b - a * a))) + ' (cm²)' }); });
   def('6-which', 6, 3, function () { var r = ri(3, 9); return choice({ q: '반지름이 ' + r + ' cm인 원의 넓이를 구하는 식으로 알맞은 것은?', correct: r + '×' + r + '×3.14', wrongs: [(2 * r) + '×' + (2 * r) + '×3.14', (2 * r) + '×3.14', r + '×3.14'], e: '(원의 넓이)=(반지름)×(반지름)×(원주율)이에요. ' + (2 * r) + '×3.14는 원주를 구하는 식이에요.' }); });
@@ -810,19 +815,198 @@ var Q5 = (function () {
 
   // ===== 8차시: 함께하는 수학 – 원주율 비교하기 (교과서 114~115쪽) =====
   def('8-trend', 8, 1, function () { if (rnd() < 0.5) return choice({ q: '원 안쪽에 맞닿는 정다각형의 변의 수가 늘어날수록 정다각형은 어떻게 되나요?', fig: polyFig(pick([6, 12])), correct: '원에 가까워져요', wrongs: ['원에서 멀어져요', '삼각형에 가까워져요', '변하지 않아요'], e: '변의 수가 늘어날수록 정다각형은 원에 가까워져요(교과서 115쪽).' }); return choice({ q: '원 안쪽에 맞닿는 정다각형의 변의 수가 늘어날수록 (정다각형의 둘레)÷(지름)은 어떻게 되나요?', correct: '원주율에 가까워져요', wrongs: ['점점 작아져요', '2에 가까워져요', '항상 4예요'], e: '정다각형이 원에 가까워지므로 (정다각형의 둘레)÷(지름)도 원주율(3.14…)에 가까워져요.' }); });
-  def('8-hex', 8, 1, function () { var r = ri(2, 9); return num({ q: '반지름이 ' + r + ' cm인 원 안쪽에 맞닿는 정육각형의 둘레를 지름으로 나누면 얼마인가요?', fig: polyFig(6), ans: 3, e: '정육각형의 한 변 = 반지름 ' + r + ' cm, 둘레 = ' + (6 * r) + ' cm, 지름 = ' + (2 * r) + ' cm → ' + (6 * r) + '÷' + (2 * r) + '=3' }); });
+  def('8-hex', 8, 1, function () { var r = ri(2, 15); return num({ q: '반지름이 ' + r + ' cm인 원 안쪽에 맞닿는 정육각형의 둘레를 지름으로 나누면 얼마인가요?', fig: polyFig(6), ans: 3, e: '정육각형의 한 변 = 반지름 ' + r + ' cm, 둘레 = ' + (6 * r) + ' cm, 지름 = ' + (2 * r) + ' cm → ' + (6 * r) + '÷' + (2 * r) + '=3' }); });
   def('8-div', 8, 2, function () { var n = pick([4, 6, 12, 22]); return num({ q: '반지름이 5 cm인 원 안쪽에 맞닿는 ' + PN[n] + '의 둘레가 ' + f(PP[n]) + ' cm예요. (정다각형의 둘레)÷(지름)은 얼마인가요?', fig: polyFig(n), ans: Math.round(PP[n] * 1000) / 10000, calc: true, e: '지름은 5×2=10 cm예요. ' + f(PP[n]) + '÷10=' + f(PP[n] / 10) }); });
   def('8-closest', 8, 2, function () { return choice({ q: '반지름이 5 cm인 원 안쪽에 맞닿는 정다각형 중에서 (둘레)÷(지름)이 원주율에 가장 가까운 것은?', correct: '정이십이각형', wrongs: ['정사각형', '정육각형', '정십이각형'], e: '변의 수가 많을수록 원에 가까워져요. 정사각형 2.828, 정육각형 3, 정십이각형 3.106, 정이십이각형 3.131로 정이십이각형이 3.14에 가장 가까워요.' }); });
   def('8-less', 8, 3, function () { var n = pick([6, 12, 22]); return choice({ q: '원 안쪽에 맞닿는 ' + PN[n] + '의 둘레와 원주를 비교하면?', fig: polyFig(n), correct: '원주가 더 길어요', wrongs: [PN[n] + '의 둘레가 더 길어요', '둘의 길이가 같아요', '비교할 수 없어요'], e: '원 안쪽에 맞닿는 정다각형은 원 안에 들어 있어서 둘레가 원주보다 짧아요. 그래서 (둘레)÷(지름)은 3.14보다 조금 작아요.' }); });
   def('8-order', 8, 3, function () { var ns = shuffle([4, 6, 12]).slice(0, 2), a = ns[0], b = ns[1]; var big = a > b ? a : b; return choice({ q: '반지름이 5 cm인 원 안쪽에 ' + PN[a] + '과 ' + PN[b] + '을 그렸어요. (둘레)÷(지름)이 더 큰 것은?', correct: PN[big], wrongs: [PN[a === big ? b : a], '두 값이 같아요'], e: PN[a] + ' ' + f(PP[a] / 10) + ', ' + PN[b] + ' ' + f(PP[b] / 10) + '이에요. 변의 수가 많을수록 값이 커지며 원주율에 가까워져요.' }); });
 
   // ===== 9차시: 해결하는 수학 – 동물 보호소 방석 (교과서 116~117쪽) =====
-  def('9-area', 9, 1, function () { var r = pick([10, 20, 30]); return num({ q: '동물 보호소의 반지름이 ' + r + ' cm인 원 모양 방석의 넓이는 몇 cm²인가요? ' + PU, ans: A(P(r * r)), unit: 'cm²', e: r + '×' + r + '×3.14=' + f(A(P(r * r))) + ' (cm²)' }); });
+  def('9-area', 9, 1, function () { var r = 5 * ri(1, 8); return num({ q: '동물 보호소의 반지름이 ' + r + ' cm인 원 모양 방석의 넓이는 몇 cm²인가요? ' + PU, ans: A(P(r * r)), unit: 'cm²', e: r + '×' + r + '×3.14=' + f(A(P(r * r))) + ' (cm²)' }); });
   def('9-x2', 9, 1, function () { return choice({ q: '반지름이 10 cm인 방석의 넓이는 314 cm², 반지름이 20 cm인 방석의 넓이는 1256 cm²예요. 반지름이 2배가 되면 넓이는 몇 배가 되나요?', correct: '4배', wrongs: ['2배', '3배', '8배'], e: '1256÷314=4예요. 반지름이 2배이면 (반지름)×(반지름)이 2×2=4배가 되어 넓이도 4배예요.' }); });
   def('9-n', 9, 2, function () { var n = ri(2, 5); return choice({ q: '반지름이 ' + n + '배가 되면 원의 넓이는 몇 배가 되나요?', correct: (n * n) + '배', wrongs: shuffle([n + '배', (2 * n) + '배', (n * n * n) + '배', (n + 2) + '배'].filter(function (x) { return x !== (n * n) + '배'; })).slice(0, 3), e: '넓이는 (반지름)×(반지름)×3.14이므로 반지름이 ' + n + '배이면 넓이는 ' + n + '×' + n + '=' + (n * n) + '배예요.' }); });
-  def('9-12', 9, 2, function () { var n = pick([2, 3]); return num({ q: '반지름이 12 cm인 원의 넓이는 452.16 cm²예요. 반지름이 ' + (12 * n) + ' cm인 원의 넓이는 몇 cm²인가요?', ans: A(P(144 * n * n)), unit: 'cm²', calc: true, e: '반지름이 ' + n + '배이므로 넓이는 ' + (n * n) + '배예요. 452.16×' + (n * n) + '=' + f(A(P(144 * n * n))) + ' (cm²). 직접 ' + (12 * n) + '×' + (12 * n) + '×3.14로 계산해도 같아요.' }); });
+  def('9-12', 9, 2, function () { var r0 = ri(4, 15), n = pick([2, 3]), a0 = A(P(r0 * r0)); return num({ q: '반지름이 ' + r0 + ' cm인 원의 넓이는 ' + f(a0) + ' cm²예요. 반지름이 ' + (r0 * n) + ' cm인 원의 넓이는 몇 cm²인가요?', ans: A(P(r0 * r0 * n * n)), unit: 'cm²', calc: true, e: '반지름이 ' + n + '배이므로 넓이는 ' + (n * n) + '배예요. ' + f(a0) + '×' + (n * n) + '=' + f(A(P(r0 * r0 * n * n))) + ' (cm²). 직접 ' + (r0 * n) + '×' + (r0 * n) + '×3.14로 계산해도 같아요.' }); });
   def('9-rev', 9, 3, function () { var n = ri(2, 5); return choice({ q: '두 원 모양 방석이 있어요. 큰 방석의 넓이가 작은 방석 넓이의 ' + (n * n) + '배예요. 큰 방석의 반지름은 작은 방석 반지름의 몇 배인가요?', correct: n + '배', wrongs: shuffle([(n * n) + '배', (2 * n) + '배', (n + 1) + '배'].filter(function (x) { return x !== n + '배'; })).slice(0, 3), e: '반지름이 ' + n + '배이면 넓이는 ' + n + '×' + n + '=' + (n * n) + '배예요. 거꾸로 생각하면 넓이가 ' + (n * n) + '배일 때 반지름은 ' + n + '배예요.' }); });
   def('9-base', 9, 3, function () { var r = ri(2, 6), n = ri(2, 4), a = A(P(r * r)); return num({ q: '어떤 원의 넓이가 ' + f(a) + ' cm²예요. 반지름을 ' + n + '배로 늘인 원의 넓이는 몇 cm²인가요?', ans: A(P(r * r * n * n)), unit: 'cm²', calc: true, e: '반지름이 ' + n + '배 → 넓이는 ' + (n * n) + '배. ' + f(a) + '×' + (n * n) + '=' + f(A(P(r * r * n * n))) + ' (cm²)' }); });
+
+  /* ===== 추가 유형 (차시별 범위 안에서 문장·상황·수를 넓힘) ===== */
+  // 원주율이 3, 3.1, 3.14일 때 곱셈을 소수 오차 없이
+  function mp(n, k) { var m = { 3: [3, 1], 3.1: [31, 10], 3.14: [314, 100] }[k]; return Math.round(n * 1000 * m[0] / m[1]) / 1000; }
+  function PUk(k) { return '(원주율: ' + k + ')'; }
+  function oxBank(L, star, bank) { def(L + '-oxb' + star, L, star, function () { var s = pick(bank); return ox('다음 문장이 맞으면 O, 틀리면 X를 고르세요.<br>「' + s[0] + '」', s[1], s[2]); }); }
+  var OBJ_D = ['훌라후프', '굴렁쇠', '원 모양 접시', '원 모양 시계', '원 모양 거울', '탬버린', '원 모양 쟁반', '원 모양 표지판'];
+  var OBJ_A = ['원 모양 화단', '원 모양 연못', '원 모양 분수대', '원 모양 놀이터', '원 모양 텃밭'];
+  function leafFig(s) { var x = 70, y = 15, S = 110; return svg('<rect x="' + x + '" y="' + y + '" width="' + S + '" height="' + S + '" fill="#141b33" stroke="' + INK + '" stroke-width="2.5"/><path d="M' + x + ' ' + (y + S) + ' A' + S + ' ' + S + ' 0 0 1 ' + (x + S) + ' ' + y + ' A' + S + ' ' + S + ' 0 0 1 ' + x + ' ' + (y + S) + ' Z" fill="#3fa05a" stroke="' + INK + '" stroke-width="2"/>' + txt(x + S / 2, y + S + 14, s + ' cm', BLUE)); }
+  function cornersFig(s) { var x = 70, y = 15, S = 110, h = S / 2; var a = function (cx, cy, sx, sy) { return '<path d="M' + cx + ' ' + cy + ' L' + (cx + sx * h) + ' ' + cy + ' A' + h + ' ' + h + ' 0 0 ' + (sx * sy > 0 ? 1 : 0) + ' ' + cx + ' ' + (cy + sy * h) + ' Z" fill="#3b5dc9" stroke="' + INK + '" stroke-width="1.5"/>'; };
+    return svg('<rect x="' + x + '" y="' + y + '" width="' + S + '" height="' + S + '" fill="#d8b030" stroke="' + INK + '" stroke-width="2.5"/>' + a(x, y, 1, 1) + a(x + S, y, -1, 1) + a(x, y + S, 1, -1) + a(x + S, y + S, -1, -1) + txt(x + S / 2, y + S + 14, s + ' cm', BLUE)); }
+  function circSqFig(d) { var cx = 120, cy = 75, R = 60; return svg('<circle cx="' + cx + '" cy="' + cy + '" r="' + R + '" fill="#3fa05a" stroke="' + INK + '" stroke-width="2.5"/><polygon points="' + cx + ',' + (cy - R) + ' ' + (cx + R) + ',' + cy + ' ' + cx + ',' + (cy + R) + ' ' + (cx - R) + ',' + cy + '" fill="' + FILL + '" stroke="' + INK + '" stroke-width="2"/><line x1="' + (cx - R) + '" y1="' + cy + '" x2="' + (cx + R) + '" y2="' + cy + '" stroke="' + BLUE + '" stroke-width="2" stroke-dasharray="5 4"/>' + txt(cx, cy - 6, d + ' cm', BLUE)); }
+  function pacFig(r) { var cx = 120, cy = 75, R = 60; return svg('<path d="M' + cx + ' ' + cy + ' L' + (cx + R) + ' ' + cy + ' A' + R + ' ' + R + ' 0 1 1 ' + cx + ' ' + (cy - R) + ' Z" fill="#3b5dc9" stroke="' + INK + '" stroke-width="2.5"/>' + txt(cx + R / 2, cy + 16, r + ' cm', BLUE)); }
+  function rectSemiFig(a, d) { var H = 80, W = Math.min(130, H * a / d), x = 40, y = 35, R = H / 2; return svg('<path d="M' + x + ' ' + y + ' L' + (x + W) + ' ' + y + ' A' + R + ' ' + R + ' 0 0 1 ' + (x + W) + ' ' + (y + H) + ' L' + x + ' ' + (y + H) + ' Z" fill="#3b5dc9" stroke="' + INK + '" stroke-width="2.5"/><line x1="' + (x + W) + '" y1="' + y + '" x2="' + (x + W) + '" y2="' + (y + H) + '" stroke="' + INK + '" stroke-dasharray="4 4"/>' + txt(x + W / 2, y - 6, a + ' cm') + txt(x - 18, y + H / 2 + 4, d + ' cm')); }
+
+  // ----- 1차시 (원의 구성 요소 · 넓이와 소수 계산 복습) -----
+  def('1-rd2', 1, 1, function () {
+    var o = pick(OBJ_D), r = ri(3, 30);
+    if (rnd() < 0.5) return num({ q: o + '의 반지름이 ' + r + ' cm예요. 지름은 몇 cm인가요?', fig: cFig(r + ' cm', 'r'), ans: 2 * r, unit: 'cm', e: '지름은 반지름의 2배예요. ' + r + '×2=' + (2 * r) + ' (cm)' });
+    return num({ q: o + '의 지름이 ' + (2 * r) + ' cm예요. 반지름은 몇 cm인가요?', fig: cFig((2 * r) + ' cm', 'd'), ans: r, unit: 'cm', e: '반지름은 지름의 반이에요. ' + (2 * r) + '÷2=' + r + ' (cm)' });
+  });
+  def('1-know', 1, 1, function () {
+    var b = pick([
+      ['원 위의 두 점을 이은 선분 중에서 가장 긴 선분은?', '지름', ['반지름', '원의 중심', '원주'], '원의 중심을 지나는 선분인 지름이 가장 길어요.'],
+      ['한 원에서 지름은 몇 개 그을 수 있나요?', '셀 수 없이 많아요', ['1개', '2개', '4개'], '원의 중심을 지나는 선분은 셀 수 없이 많이 그을 수 있어요.'],
+      ['한 원에서 반지름들의 길이는 어떤가요?', '모두 같아요', ['모두 달라요', '긴 것이 1개 있어요', '지름보다 길어요'], '한 원에서 반지름은 모두 길이가 같아요.'],
+      ['한 원에서 지름은 반지름의 몇 배인가요?', '2배', ['1배', '3배', '4배'], '지름은 반지름 2개를 이은 길이라서 반지름의 2배예요.'],
+      ['원의 지름은 원을 똑같이 몇 부분으로 나누나요?', '2부분', ['3부분', '4부분', '나누지 않아요'], '지름은 원의 중심을 지나서 원을 똑같이 둘로 나눠요.']
+    ]);
+    return choice({ q: b[0], correct: b[1], wrongs: b[2], e: b[3] });
+  });
+  def('1-rper', 1, 1, function () { var w = ri(4, 15), h = ri(2, 12); if (h === w) h = w - 1; return num({ q: '직사각형의 둘레는 몇 cm인가요?', fig: rectFig(w, h), ans: 2 * (w + h), unit: 'cm', e: '(직사각형의 둘레)=((가로)+(세로))×2=(' + w + '+' + h + ')×2=' + (2 * (w + h)) + ' (cm)' }); });
+  def('1-tri', 1, 2, function () { var b = ri(3, 16), h = ri(2, 12); if ((b * h) % 2) b++; return num({ q: '밑변이 ' + b + ' cm, 높이가 ' + h + ' cm인 삼각형의 넓이는 몇 cm²인가요?', ans: b * h / 2, unit: 'cm²', e: '(삼각형의 넓이)=(밑변)×(높이)÷2=' + b + '×' + h + '÷2=' + (b * h / 2) + ' (cm²)' }); });
+  def('1-para', 1, 2, function () { var b = ri(3, 15), h = ri(2, 12); return num({ q: '밑변이 ' + b + ' cm, 높이가 ' + h + ' cm인 평행사변형의 넓이는 몇 cm²인가요?', ans: b * h, unit: 'cm²', e: '(평행사변형의 넓이)=(밑변)×(높이)=' + b + '×' + h + '=' + (b * h) + ' (cm²)' }); });
+  def('1-row', 1, 2, function () { var n = ri(2, 5), r = ri(2, 9); return num({ q: '반지름이 ' + r + ' cm인 원 ' + n + '개를 한 줄로 꼭 맞닿게 그렸어요. 맨 왼쪽부터 맨 오른쪽까지의 길이는 몇 cm인가요?', ans: 2 * r * n, unit: 'cm', e: '원 하나의 지름은 ' + r + '×2=' + (2 * r) + ' cm예요. 지름 ' + n + '개를 이은 길이라서 ' + (2 * r) + '×' + n + '=' + (2 * r * n) + ' (cm)' }); });
+  def('1-mul314', 1, 3, function () {
+    var k = pick([3.14, 3.14, 3.1]), n = ri(2, 25);
+    if (rnd() < 0.4) { var a = ri(2, 9); return num({ q: '계산해 보세요.<br>' + a + '×' + a + '×' + k, ans: mp(a * a, k), unit: '', e: a + '×' + a + '=' + (a * a) + ', ' + (a * a) + '×' + k + '=' + f(mp(a * a, k)) }); }
+    return num({ q: '계산해 보세요.<br>' + n + '×' + k, ans: mp(n, k), unit: '', e: n + '×' + k + '=' + f(mp(n, k)) });
+  });
+  def('1-box', 1, 3, function () { var n = ri(2, 15); return num({ q: '□ 안에 알맞은 수를 구해 보세요.<br>□×3.14=' + f(mp(n, 3.14)), ans: n, unit: '', calc: true, e: f(mp(n, 3.14)) + '÷3.14=' + n + '이에요.' }); });
+
+  // ----- 2차시 (원주 알아보기 · 정육각형과 정사각형으로 어림) -----
+  def('2-hexside', 2, 1, function () { var r = ri(2, 15); return num({ q: '반지름이 ' + r + ' cm인 원 안에 꼭 맞게 정육각형을 그렸어요. 정육각형의 한 변의 길이는 몇 cm인가요?', fig: hexFig(r), ans: r, unit: 'cm', e: '원 안에 꼭 맞게 그린 정육각형의 한 변의 길이는 원의 반지름과 같아요. ' + r + ' cm' }); });
+  def('2-sqside', 2, 1, function () { var r = ri(2, 15); return num({ q: '반지름이 ' + r + ' cm인 원을 꼭 맞게 둘러싼 정사각형의 한 변의 길이는 몇 cm인가요?', ans: 2 * r, unit: 'cm', e: '원을 둘러싼 정사각형의 한 변의 길이는 원의 지름과 같아요. ' + r + '×2=' + (2 * r) + ' (cm)' }); });
+  def('2-cmp', 2, 1, function () {
+    var a = ri(3, 12), b = 2 * ri(3, 12); if (b === 2 * a) b += 2;
+    var big = 2 * a > b ? '가' : '나';
+    return choice({ q: '원주가 더 긴 원은 어느 것인가요?<br>가: 반지름이 ' + a + ' cm인 원<br>나: 지름이 ' + b + ' cm인 원', correct: big, wrongs: [big === '가' ? '나' : '가', '두 원의 원주가 같아요'], e: '가의 지름은 ' + a + '×2=' + (2 * a) + ' cm, 나의 지름은 ' + b + ' cm예요. 지름이 길수록 원주도 길어서 ' + big + '의 원주가 더 길어요.' });
+  });
+  oxBank(2, 2, [
+    ['원 안에 꼭 맞게 그린 정육각형의 둘레는 원의 반지름의 6배예요.', true, '맞아요. 정육각형의 한 변이 반지름과 같아서 둘레는 반지름의 6배(지름의 3배)예요.'],
+    ['원을 꼭 맞게 둘러싼 정사각형의 둘레는 원의 지름의 4배예요.', true, '맞아요. 정사각형의 한 변이 지름과 같아서 둘레는 지름의 4배예요.'],
+    ['원주와 원 안에 꼭 맞게 그린 정육각형의 둘레는 길이가 같아요.', false, '틀려요. 원주가 정육각형의 둘레보다 더 길어요.'],
+    ['원주는 원의 지름의 3배보다 짧아요.', false, '틀려요. 원주는 지름의 3배보다 길고 4배보다 짧아요.'],
+    ['원주는 원의 지름의 4배보다 짧아요.', true, '맞아요. 원주는 지름의 3배보다 길고 4배보다 짧아요.']
+  ]);
+  def('2-est', 2, 2, function () {
+    var d = 2 * ri(2, 15);
+    if (rnd() < 0.5) return num({ q: '지름이 ' + d + ' cm인 원이 있어요. 원 안에 꼭 맞는 정육각형으로 생각하면 원주는 몇 cm보다 길어요?', fig: hexFig(d / 2), ans: 3 * d, unit: 'cm', e: '정육각형의 둘레는 지름의 3배예요. ' + d + '×3=' + (3 * d) + ' cm보다 원주가 길어요.' });
+    return num({ q: '지름이 ' + d + ' cm인 원이 있어요. 원을 둘러싼 정사각형으로 생각하면 원주는 몇 cm보다 짧아요?', ans: 4 * d, unit: 'cm', e: '정사각형의 둘레는 지름의 4배예요. ' + d + '×4=' + (4 * d) + ' cm보다 원주가 짧아요.' });
+  });
+  def('2-objest', 2, 3, function () {
+    var o = pick(OBJ_D), d = 10 * ri(3, 9), c = Math.round(d * 3.14);
+    return choice({ q: '지름이 ' + d + ' cm인 ' + o + '의 둘레(원주)로 알맞은 것은?', correct: '약 ' + c + ' cm', wrongs: ['약 ' + (2 * d) + ' cm', '약 ' + (Math.round(d * 2.5)) + ' cm', '약 ' + (Math.round(d * 4.5)) + ' cm'], e: '원주는 지름의 3배(' + (3 * d) + ' cm)보다 길고 4배(' + (4 * d) + ' cm)보다 짧아요. 그 사이에 있는 수는 ' + c + ' cm뿐이에요.' });
+  });
+
+  // ----- 3차시 (원주율) -----
+  oxBank(3, 1, [
+    ['원주율은 원의 크기와 상관없이 일정해요.', true, '맞아요. 원이 커지거나 작아져도 (원주)÷(지름)은 같아요.'],
+    ['큰 원일수록 원주율이 커요.', false, '틀려요. 원의 크기와 상관없이 원주율은 일정해요.'],
+    ['원주율은 소수점 아래 숫자가 끝없이 이어져요.', true, '맞아요. 원주율은 3.1415926535…처럼 끝없이 이어져서 3.14, 3.1, 3 등으로 어림해서 써요.'],
+    ['원주율은 정확히 3.14예요.', false, '틀려요. 원주율은 3.1415926535…처럼 끝없이 이어지는 수라서 3.14는 어림한 값이에요.'],
+    ['(원주)÷(지름)의 값을 원주율이라고 해요.', true, '맞아요. 원의 지름에 대한 원주의 비율을 원주율이라고 해요.'],
+    ['(지름)÷(원주)의 값을 원주율이라고 해요.', false, '틀려요. 원주율은 (원주)÷(지름)이에요.']
+  ]);
+  def('3-round', 3, 2, function () {
+    var b = pick([['일의 자리까지', '3'], ['소수 첫째 자리까지', '3.1'], ['소수 둘째 자리까지', '3.14']]);
+    return choice({ q: '원주율 3.1415926535…를 반올림하여 ' + b[0] + ' 나타내면?', correct: b[1], wrongs: ['3', '3.1', '3.14', '3.2', '3.15'].filter(function (x) { return x !== b[1]; }).slice(0, 3), e: '3.1415926535…를 반올림하면 일의 자리까지 3, 소수 첫째 자리까지 3.1, 소수 둘째 자리까지 3.14예요.' });
+  });
+  def('3-blank', 3, 2, function () {
+    var b = pick([['(원주율)=(원주)÷(□)', '지름'], ['(원주율)=(□)÷(지름)', '원주']]);
+    return choice({ q: '□ 안에 알맞은 말은?<br>' + b[0], correct: b[1], wrongs: ['지름', '원주', '반지름', '원의 중심'].filter(function (x) { return x !== b[1]; }), e: '(원주율)=(원주)÷(지름)이에요.' });
+  });
+  def('3-tab', 3, 3, function () {
+    var names = shuffle(['접시', '동전', '시계', '탬버린', '컵 받침']).slice(0, 3), rows = names.map(function (n) { var d = ri(4, 30), c; do { c = Math.round(d * (3.1 + rnd() * 0.05) * 10) / 10; } while (c / d < 3.1 || c / d >= 3.15); return [n, f(c), String(d)]; });
+    return choice({ q: '여러 물건의 원주와 지름을 재었어요. (원주)÷(지름)을 반올림하여 소수 첫째 자리까지 나타내면 모두 얼마인가요?', fig: tableFig(rows, ['물건', '원주(cm)', '지름(cm)']), correct: '3.1', wrongs: ['3', '3.2', '4'], calc: true, e: rows.map(function (r) { return r[0] + ' ' + r[1] + '÷' + r[2] + '=' + f(Math.round(r[1] / r[2] * 1000) / 1000) + '…'; }).join(', ') + ' → 모두 약 3.1이에요. 원의 크기가 달라도 원주율은 같아요.' });
+  });
+
+  // ----- 4차시 (원주와 지름 구하기) -----
+  def('4-cdk', 4, 1, function () { var k = pick([3, 3.1]), d = ri(4, 30); return num({ q: '지름이 ' + d + ' cm인 원의 원주는 몇 cm인가요? ' + PUk(k), fig: cFig(d + ' cm', 'd'), ans: mp(d, k), unit: 'cm', e: '(원주)=(지름)×(원주율)=' + d + '×' + k + '=' + f(mp(d, k)) + ' (cm)' }); });
+  oxBank(4, 1, [
+    ['(원주)=(지름)×(원주율)이에요.', true, '맞아요. 원주율이 (원주)÷(지름)이므로 (원주)=(지름)×(원주율)이에요.'],
+    ['(원주)=(반지름)×(원주율)이에요.', false, '틀려요. (원주)=(지름)×(원주율)=(반지름)×2×(원주율)이에요.'],
+    ['(지름)=(원주)÷(원주율)이에요.', true, '맞아요. (원주)=(지름)×(원주율)이므로 (지름)=(원주)÷(원주율)이에요.'],
+    ['지름이 2배가 되면 원주도 2배가 돼요.', true, '맞아요. (원주)=(지름)×(원주율)이라서 지름이 2배면 원주도 2배예요.'],
+    ['반지름이 3배가 되면 원주는 9배가 돼요.', false, '틀려요. 반지름이 3배면 지름도 3배라서 원주는 3배가 돼요.']
+  ]);
+  def('4-crk', 4, 2, function () { var k = pick([3, 3.1, 3.14]), r = ri(2, 20); return num({ q: '반지름이 ' + r + ' cm인 원의 원주는 몇 cm인가요? ' + PUk(k), fig: cFig(r + ' cm', 'r'), ans: mp(2 * r, k), unit: 'cm', e: '(원주)=(반지름)×2×(원주율)=' + r + '×2×' + k + '=' + f(mp(2 * r, k)) + ' (cm)' }); });
+  def('4-obj', 4, 2, function () {
+    var o = pick(OBJ_D), m = rnd() < 0.5;
+    if (m) { var d = 10 * ri(2, 9); return num({ q: '지름이 ' + d + ' cm인 ' + o + '의 둘레는 몇 cm인가요? ' + PU, ans: A(P(d)), unit: 'cm', e: d + '×3.14=' + f(A(P(d))) + ' (cm)' }); }
+    var r = ri(5, 25); return num({ q: '반지름이 ' + r + ' cm인 ' + o + '의 둘레는 몇 cm인가요? ' + PU, ans: A(P(2 * r)), unit: 'cm', e: r + '×2×3.14=' + f(A(P(2 * r))) + ' (cm)' });
+  });
+  def('4-pole', 4, 2, function () { var d = ri(8, 60), o = pick(['원 모양 나무 기둥', '원 모양 통조림 캔', '원 모양 화분', '원 모양 케이크']); return num({ q: '둘레가 ' + f(A(P(d))) + ' cm인 ' + o + '의 지름은 몇 cm인가요? ' + PU, ans: d, unit: 'cm', calc: true, e: '(지름)=(원주)÷(원주율)=' + f(A(P(d))) + '÷3.14=' + d + ' (cm)' }); });
+  def('4-revs', 4, 3, function () { var d = 10 * ri(3, 8), n = ri(2, 10); return num({ q: '지름이 ' + d + ' cm인 바퀴를 굴렸더니 ' + f(A(P(d * n))) + ' cm를 굴러갔어요. 바퀴는 몇 바퀴 굴렀나요? ' + PU, ans: n, unit: '바퀴', calc: true, e: '한 바퀴 굴러간 거리는 ' + d + '×3.14=' + f(A(P(d))) + ' cm예요. ' + f(A(P(d * n))) + '÷' + f(A(P(d))) + '=' + n + ' (바퀴)' }); });
+  def('4-semiper', 4, 3, function () { var d = 2 * ri(2, 12); return num({ q: '지름이 ' + d + ' cm인 반원의 둘레는 몇 cm인가요? (곡선 부분과 지름을 모두 더해요) ' + PU, fig: semiFig(d), ans: A(P(d) / 2 + d * 100), unit: 'cm', e: '곡선 부분은 원주의 반: ' + d + '×3.14÷2=' + f(A(P(d) / 2)) + ' cm, 여기에 지름 ' + d + ' cm를 더해요. ' + f(A(P(d) / 2)) + '+' + d + '=' + f(A(P(d) / 2 + d * 100)) + ' (cm)' }); });
+  def('4-cdiff', 4, 3, function () { var a = ri(3, 12), b = 2 * ri(3, 12); if (b === 2 * a) b += 2; var D = Math.abs(2 * a - b); return num({ q: '반지름이 ' + a + ' cm인 원과 지름이 ' + b + ' cm인 원이 있어요. 두 원의 원주의 차는 몇 cm인가요? ' + PU, ans: A(P(D)), unit: 'cm', e: '두 원의 지름은 ' + (2 * a) + ' cm와 ' + b + ' cm로 ' + D + ' cm 차이 나요. 원주의 차는 ' + D + '×3.14=' + f(A(P(D))) + ' (cm)예요. 각각 구해서 빼도 같아요.' }); });
+
+  // ----- 5차시 (원의 넓이 어림하기) -----
+  oxBank(5, 1, [
+    ['원의 넓이는 원을 꼭 맞게 둘러싼 정사각형의 넓이보다 넓어요.', false, '틀려요. 원은 둘러싼 정사각형 안에 들어 있어서 넓이가 더 좁아요.'],
+    ['원의 넓이는 원 안에 꼭 맞게 그린 정사각형의 넓이보다 넓어요.', true, '맞아요. 원 안의 정사각형은 원 안에 들어 있어서 원이 더 넓어요.'],
+    ['원을 둘러싼 정사각형의 넓이는 (반지름)×(반지름)의 4배예요.', true, '맞아요. 한 변이 지름(반지름의 2배)이라서 넓이는 (반지름)×(반지름)의 4배예요.'],
+    ['원 안에 꼭 맞게 그린 정사각형의 넓이는 (반지름)×(반지름)의 2배예요.', true, '맞아요. 대각선이 지름인 정사각형(마름모)이라서 지름×지름÷2 = (반지름)×(반지름)×2예요.'],
+    ['원의 넓이는 (반지름)×(반지름)의 2배보다 넓고 4배보다 좁아요.', true, '맞아요. 원 안 정사각형(2배)보다 넓고 원 밖 정사각형(4배)보다 좁아요.']
+  ]);
+  def('5-outd', 5, 1, function () { var d = 2 * ri(2, 15); return num({ q: '지름이 ' + d + ' cm인 원을 꼭 맞게 둘러싼 정사각형의 넓이는 몇 cm²인가요?', ans: d * d, unit: 'cm²', e: '정사각형의 한 변이 지름 ' + d + ' cm와 같아요. ' + d + '×' + d + '=' + (d * d) + ' (cm²)' }); });
+  def('5-ind', 5, 2, function () { var d = 2 * ri(2, 15); return num({ q: '지름이 ' + d + ' cm인 원 안에 꼭 맞게 그린 정사각형의 넓이는 몇 cm²인가요? (정사각형의 대각선이 원의 지름이에요)', fig: circSqFig(d), ans: d * d / 2, unit: 'cm²', e: '대각선이 ' + d + ' cm인 정사각형(마름모)의 넓이: ' + d + '×' + d + '÷2=' + (d * d / 2) + ' (cm²)' }); });
+  def('5-avg', 5, 2, function () { var r = ri(3, 15); return num({ q: '반지름이 ' + r + ' cm인 원 안의 정사각형 넓이는 ' + (2 * r * r) + ' cm², 원 밖의 정사각형 넓이는 ' + (4 * r * r) + ' cm²예요. 두 넓이의 가운데(평균)로 원의 넓이를 어림하면 몇 cm²인가요?', ans: 3 * r * r, unit: 'cm²', e: '(' + (2 * r * r) + '+' + (4 * r * r) + ')÷2=' + (3 * r * r) + ' (cm²)' }); });
+  def('5-grng', 5, 3, function () { var r = pick([3, 4, 5]), g = gridCount(r); return choice({ q: '반지름이 ' + r + ' cm인 원을 1 cm 모눈종이에 그렸어요. 원 안쪽에 완전히 들어간 칸은 ' + g.inn + '칸, 원이 지나가는 칸까지 모두 ' + g.out + '칸이에요. 원의 넓이로 알맞은 것은?', correct: g.inn + ' cm²보다 넓고 ' + g.out + ' cm²보다 좁아요', wrongs: [g.inn + ' cm²보다 좁아요', g.out + ' cm²보다 넓어요', '정확히 ' + g.out + ' cm²예요'], e: '원은 안쪽 칸(' + g.inn + '칸)보다 넓고, 원이 지나가는 칸까지 센 ' + g.out + '칸보다 좁아요.' }); });
+
+  // ----- 6차시 (원의 넓이 구하기) -----
+  oxBank(6, 1, [
+    ['(원의 넓이)=(반지름)×(반지름)×(원주율)이에요.', true, '맞아요.'],
+    ['(원의 넓이)=(지름)×(지름)×(원주율)이에요.', false, '틀려요. (원의 넓이)=(반지름)×(반지름)×(원주율)이에요.'],
+    ['원을 잘게 잘라 이어 붙인 직사각형의 세로는 원의 반지름과 같아요.', true, '맞아요. 세로는 반지름, 가로는 원주의 반이에요.'],
+    ['원을 잘게 잘라 이어 붙인 직사각형의 가로는 원주와 같아요.', false, '틀려요. 가로는 원주의 1/2이에요.'],
+    ['반지름이 1 cm인 원의 넓이는 3.14 cm²예요. (원주율: 3.14)', true, '맞아요. 1×1×3.14=3.14 (cm²)']
+  ]);
+  def('6-ark', 6, 1, function () { var k = pick([3, 3.1]), r = ri(2, 15); return num({ q: '반지름이 ' + r + ' cm인 원의 넓이는 몇 cm²인가요? ' + PUk(k), fig: cFig(r + ' cm', 'r'), ans: mp(r * r, k), unit: 'cm²', e: r + '×' + r + '×' + k + '=' + f(mp(r * r, k)) + ' (cm²)' }); });
+  def('6-obj', 6, 2, function () {
+    if (rnd() < 0.5) { var o = pick(['피자', '원 모양 접시', '원 모양 시계', '원 모양 거울', '원 모양 깔개']), d = 2 * ri(5, 20); return num({ q: '지름이 ' + d + ' cm인 ' + o + '의 넓이는 몇 cm²인가요? ' + PU, ans: A(P(d * d / 4)), unit: 'cm²', e: '반지름은 ' + (d / 2) + ' cm예요. ' + (d / 2) + '×' + (d / 2) + '×3.14=' + f(A(P(d * d / 4))) + ' (cm²)' }); }
+    var p = pick(OBJ_A), r = ri(2, 12); return num({ q: '반지름이 ' + r + ' m인 ' + p + '의 넓이는 몇 m²인가요? ' + PU, ans: A(P(r * r)), unit: 'm²', e: r + '×' + r + '×3.14=' + f(A(P(r * r))) + ' (m²)' });
+  });
+  def('6-rectw', 6, 2, function () { var r = ri(2, 15); if (rnd() < 0.5) return num({ q: '반지름이 ' + r + ' cm인 원을 잘게 잘라 이어 붙여 직사각형을 만들었어요. 직사각형의 가로는 몇 cm인가요? ' + PU, ans: A(P(r)), unit: 'cm', e: '가로는 원주의 1/2이에요. ' + r + '×2×3.14÷2=' + r + '×3.14=' + f(A(P(r))) + ' (cm)' }); return num({ q: '반지름이 ' + r + ' cm인 원을 잘게 잘라 이어 붙여 직사각형을 만들었어요. 직사각형의 세로는 몇 cm인가요?', ans: r, unit: 'cm', e: '직사각형의 세로는 원의 반지름과 같아요. ' + r + ' cm' }); });
+  def('6-cmpA', 6, 2, function () {
+    var a = ri(3, 12), b = 2 * ri(3, 12); if (b === 2 * a) b += 2; var big = 2 * a > b ? '가' : '나';
+    return choice({ q: '넓이가 더 넓은 원은 어느 것인가요?<br>가: 반지름이 ' + a + ' cm인 원<br>나: 지름이 ' + b + ' cm인 원', correct: big, wrongs: [big === '가' ? '나' : '가', '두 원의 넓이가 같아요'], e: '가의 반지름은 ' + a + ' cm, 나의 반지름은 ' + (b / 2) + ' cm예요. 반지름이 긴 ' + big + '가 더 넓어요.' });
+  });
+  def('6-rfromA', 6, 3, function () { var r = ri(2, 15), Ar = A(P(r * r)); if (rnd() < 0.5) return num({ q: '넓이가 ' + f(Ar) + ' cm²인 원의 반지름은 몇 cm인가요? ' + PU, ans: r, unit: 'cm', calc: true, e: f(Ar) + '÷3.14=' + (r * r) + '이고 ' + r + '×' + r + '=' + (r * r) + '이므로 반지름은 ' + r + ' cm예요.' }); return num({ q: '넓이가 ' + f(Ar) + ' cm²인 원의 지름은 몇 cm인가요? ' + PU, ans: 2 * r, unit: 'cm', calc: true, e: f(Ar) + '÷3.14=' + (r * r) + ' → 반지름 ' + r + ' cm, 지름은 ' + r + '×2=' + (2 * r) + ' (cm)예요.' }); });
+
+  // ----- 7차시 (여러 가지 원의 넓이) -----
+  def('7-semir', 7, 1, function () { var r = ri(2, 12); return num({ q: '반지름이 ' + r + ' cm인 반원의 넓이는 몇 cm²인가요? ' + PU, fig: semiFig(2 * r), ans: A(P(r * r)) / 2, unit: 'cm²', e: r + '×' + r + '×3.14÷2=' + f(A(P(r * r)) / 2) + ' (cm²)' }); });
+  def('7-pac', 7, 2, function () { var r = 2 * ri(1, 6); return num({ q: '반지름이 ' + r + ' cm인 원에서 1/4만큼을 잘라 내고 남은 모양이에요. 넓이는 몇 cm²인가요? ' + PU, fig: pacFig(r), ans: A(P(r * r) * 3 / 4), unit: 'cm²', e: '원의 3/4이에요. ' + r + '×' + r + '×3.14×3/4=' + f(A(P(r * r))) + '×3÷4=' + f(A(P(r * r) * 3 / 4)) + ' (cm²)' }); });
+  def('7-circsq', 7, 2, function () { var d = 2 * ri(2, 10), r = d / 2; return num({ q: '지름이 ' + d + ' cm인 원 안에 꼭 맞게 정사각형을 그렸어요. 초록색 부분(원에서 정사각형을 뺀 부분)의 넓이는 몇 cm²인가요? ' + PU, fig: circSqFig(d), ans: A(P(r * r) - d * d * 50), unit: 'cm²', e: '원 ' + r + '×' + r + '×3.14=' + f(A(P(r * r))) + ' cm²에서 정사각형(대각선 ' + d + ' cm) ' + d + '×' + d + '÷2=' + (d * d / 2) + ' cm²를 빼요. ' + f(A(P(r * r))) + '−' + (d * d / 2) + '=' + f(A(P(r * r) - d * d * 50)) + ' (cm²)' }); });
+  def('7-rectsemi', 7, 3, function () { var d = 2 * ri(2, 8), a = ri(5, 16), r = d / 2; return num({ q: '가로 ' + a + ' cm, 세로 ' + d + ' cm인 직사각형의 한쪽에 지름이 ' + d + ' cm인 반원을 붙인 모양이에요. 전체 넓이는 몇 cm²인가요? ' + PU, fig: rectSemiFig(a, d), ans: A(a * d * 100 + P(r * r) / 2), unit: 'cm²', e: '직사각형 ' + a + '×' + d + '=' + (a * d) + ' cm², 반원 ' + r + '×' + r + '×3.14÷2=' + f(A(P(r * r) / 2)) + ' cm². 더하면 ' + f(A(a * d * 100 + P(r * r) / 2)) + ' (cm²)' }); });
+  def('7-corners', 7, 3, function () { var r = ri(2, 10), s = 2 * r; return num({ q: '한 변이 ' + s + ' cm인 정사각형의 네 꼭짓점에 반지름이 ' + r + ' cm인 원의 1/4을 하나씩 그렸어요. 노란색 부분의 넓이는 몇 cm²인가요? ' + PU, fig: cornersFig(s), ans: A(s * s * 100 - P(r * r)), unit: 'cm²', e: '원의 1/4 네 개를 모으면 반지름 ' + r + ' cm인 원 하나가 돼요. ' + (s * s) + '−' + r + '×' + r + '×3.14=' + (s * s) + '−' + f(A(P(r * r))) + '=' + f(A(s * s * 100 - P(r * r))) + ' (cm²)' }); });
+  def('7-leaf', 7, 3, function () { var s = 2 * ri(2, 10); return num({ q: '한 변이 ' + s + ' cm인 정사각형 안에 반지름이 ' + s + ' cm인 원의 1/4을 두 개 겹치게 그렸어요. 초록색 나뭇잎 모양의 넓이는 몇 cm²인가요? ' + PU, fig: leafFig(s), ans: A(P(s * s) / 2 - s * s * 100), unit: 'cm²', e: '원의 1/4 두 개를 더하면 정사각형보다 나뭇잎 모양만큼 더 넓어요. ' + s + '×' + s + '×3.14÷4×2=' + f(A(P(s * s) / 2)) + ', 여기서 정사각형 ' + (s * s) + '을 빼면 ' + f(A(P(s * s) / 2 - s * s * 100)) + ' (cm²)' }); });
+
+  // ----- 8차시 (정다각형으로 원주율 탐구) -----
+  var PN2 = { 4: '정사각형', 6: '정육각형', 8: '정팔각형', 12: '정십이각형', 22: '정이십이각형' }, PV = { 4: '2.83', 6: '3', 8: '3.06', 12: '3.11', 22: '3.13' };
+  oxBank(8, 1, [
+    ['원 안쪽에 맞닿는 정다각형의 변의 수가 많아질수록 정다각형의 둘레는 원주에 가까워져요.', true, '맞아요. 변이 많을수록 정다각형이 원에 가까워져요.'],
+    ['원 안쪽에 맞닿는 정다각형의 둘레는 원주보다 길어요.', false, '틀려요. 원 안에 들어 있어서 원주보다 짧아요.'],
+    ['원 안쪽에 맞닿는 정육각형의 (둘레)÷(지름)은 3이에요.', true, '맞아요. 정육각형의 둘레는 반지름의 6배, 지름의 3배예요.'],
+    ['원 안쪽에 맞닿는 정사각형의 (둘레)÷(지름)은 정십이각형보다 커요.', false, '틀려요. 정사각형 약 2.83, 정십이각형 약 3.11로 정십이각형이 더 커요.'],
+    ['변의 수가 많은 정다각형일수록 (둘레)÷(지름)이 3.14에 가까워져요.', true, '맞아요.']
+  ]);
+  def('8-near', 8, 1, function () { var ns = shuffle([4, 6, 8, 12, 22]).slice(0, 2), big = Math.max(ns[0], ns[1]); return choice({ q: '같은 원 안쪽에 맞닿게 ' + PN2[ns[0]] + '과 ' + PN2[ns[1]] + '을 그렸어요. 둘레가 원주에 더 가까운 것은?', correct: PN2[big], wrongs: [PN2[ns[0] === big ? ns[1] : ns[0]], '둘이 똑같아요'], e: '변의 수가 많을수록 원에 가까워져요. ' + PN2[big] + '이 더 가까워요.' }); });
+  def('8-sqout', 8, 2, function () { var r = ri(2, 12); return num({ q: '반지름이 ' + r + ' cm인 원을 꼭 맞게 둘러싼 정사각형의 (둘레)÷(지름)은 얼마인가요?', ans: 4, unit: '', e: '정사각형의 한 변이 지름 ' + (2 * r) + ' cm라서 둘레는 ' + (8 * r) + ' cm예요. ' + (8 * r) + '÷' + (2 * r) + '=4' }); });
+  def('8-val', 8, 2, function () { var n = pick([4, 6, 8, 12, 22]); return choice({ q: '원 안쪽에 맞닿게 ' + PN2[n] + '을 그렸어요. (' + PN2[n] + '의 둘레)÷(원의 지름)에 가장 가까운 값은?', fig: polyFig(n), correct: PV[n], wrongs: [4, 6, 8, 12, 22].filter(function (m) { return m !== n; }).map(function (m) { return PV[m]; }).slice(0, 3), e: '정사각형 2.83, 정육각형 3, 정팔각형 3.06, 정십이각형 3.11, 정이십이각형 3.13… 변이 많을수록 3.14에 가까워져요.' }); });
+  def('8-oct', 8, 2, function () { return num({ q: '반지름이 5 cm인 원 안쪽에 맞닿는 정팔각형의 둘레가 30.61 cm예요. (정팔각형의 둘레)÷(지름)은 얼마인가요?', fig: polyFig(8), ans: 3.061, calc: true, e: '지름은 10 cm예요. 30.61÷10=3.061' }); });
+  def('8-btw', 8, 3, function () { return choice({ q: '원 안쪽에 맞닿는 정육각형의 (둘레)÷(지름)은 3, 원을 둘러싼 정사각형의 (둘레)÷(지름)은 4예요. 원주율에 대해 알맞은 것은?', correct: '3보다 크고 4보다 작아요', wrongs: ['3보다 작아요', '4보다 커요', '정확히 3.5예요'], e: '원주는 안쪽 정육각형의 둘레보다 길고 바깥 정사각형의 둘레보다 짧아요. 그래서 원주율은 3과 4 사이(약 3.14)예요.' }); });
+  def('8-seq', 8, 3, function () { return choice({ q: '원 안쪽에 맞닿는 정다각형의 (둘레)÷(지름)을 구했어요. 정사각형 2.83 → 정육각형 3 → 정팔각형 3.06 → 정십이각형 3.11 → …. 변의 수를 계속 늘리면 이 값은 어떻게 되나요?', correct: '3.14에 점점 가까워져요', wrongs: ['4에 가까워져요', '점점 작아져요', '3에서 멈춰요'], e: '변의 수가 많을수록 정다각형이 원에 가까워져서 (둘레)÷(지름)은 원주율 3.14…에 가까워져요.' }); });
+
+  // ----- 9차시 (반지름과 넓이의 관계 · 방석) -----
+  oxBank(9, 1, [
+    ['반지름이 2배가 되면 원의 넓이도 2배가 돼요.', false, '틀려요. 반지름이 2배면 넓이는 2×2=4배가 돼요.'],
+    ['반지름이 2배가 되면 원의 넓이는 4배가 돼요.', true, '맞아요. (반지름)×(반지름)이 2×2=4배가 돼요.'],
+    ['반지름이 3배가 되면 원의 넓이는 9배가 돼요.', true, '맞아요. 3×3=9배예요.'],
+    ['지름이 2배가 되면 원의 넓이는 4배가 돼요.', true, '맞아요. 지름이 2배면 반지름도 2배라서 넓이는 4배예요.'],
+    ['반지름이 2배가 되면 원주는 4배가 돼요.', false, '틀려요. 원주는 2배가 되고, 넓이가 4배가 돼요.']
+  ]);
+  def('9-dn', 9, 2, function () { var n = ri(2, 5); return choice({ q: '지름이 ' + n + '배가 되면 원의 넓이는 몇 배가 되나요?', correct: (n * n) + '배', wrongs: [n + '배', (2 * n) + '배', (n * n * 2) + '배'], e: '지름이 ' + n + '배면 반지름도 ' + n + '배예요. 넓이는 ' + n + '×' + n + '=' + (n * n) + '배가 돼요.' }); });
+  def('9-base2', 9, 2, function () { var r0 = pick([1, 2, 3, 5, 10]), n = ri(2, 4), o = pick(['방석', '피자', '원 모양 화단', '원 모양 깔개']), a0 = A(P(r0 * r0)); return num({ q: '반지름이 ' + r0 + ' cm인 ' + o + '의 넓이는 ' + f(a0) + ' cm²예요. 반지름이 ' + (r0 * n) + ' cm인 ' + o + '의 넓이는 몇 cm²인가요?', ans: A(P(r0 * r0 * n * n)), unit: 'cm²', calc: true, e: '반지름이 ' + n + '배이므로 넓이는 ' + (n * n) + '배예요. ' + f(a0) + '×' + (n * n) + '=' + f(A(P(r0 * r0 * n * n))) + ' (cm²)' }); });
+  def('9-cvsa', 9, 3, function () { var n = ri(2, 4); return choice({ q: '반지름을 ' + n + '배로 늘이면 원주와 넓이는 각각 몇 배가 되나요?', correct: '원주 ' + n + '배, 넓이 ' + (n * n) + '배', wrongs: ['원주 ' + n + '배, 넓이 ' + n + '배', '원주 ' + (n * n) + '배, 넓이 ' + (n * n) + '배', '원주 ' + (n * n) + '배, 넓이 ' + n + '배'], e: '(원주)=(반지름)×2×(원주율)이라서 ' + n + '배, (넓이)=(반지름)×(반지름)×(원주율)이라서 ' + n + '×' + n + '=' + (n * n) + '배예요.' }); });
+  def('9-half', 9, 3, function () { var n = pick([2, 3]); return choice({ q: '반지름을 1/' + n + '로 줄이면 원의 넓이는 처음 넓이의 몇 분의 몇이 되나요?', correct: '1/' + (n * n), wrongs: ['1/' + n, '1/' + (2 * n), (n * n) + '배'], e: '(반지름)×(반지름)이 1/' + n + '×1/' + n + '=1/' + (n * n) + '이 돼요.' }); });
+  def('9-rev2', 9, 3, function () { var k = ri(2, 5), r = ri(2, 10); return num({ q: '큰 원의 넓이는 작은 원의 넓이의 ' + (k * k) + '배예요. 작은 원의 반지름이 ' + r + ' cm일 때 큰 원의 반지름은 몇 cm인가요?', ans: k * r, unit: 'cm', e: (k * k) + '=' + k + '×' + k + '이므로 반지름은 ' + k + '배예요. ' + r + '×' + k + '=' + (k * r) + ' (cm)' }); });
 
   var LIST = Object.keys(T).map(function (k) { return T[k]; });
   function gen(L, star) {
@@ -838,15 +1022,26 @@ var Q5 = (function () {
   }
   function ansText(p) { return p.kind === 'choice' ? p.opts[p.ans] : (f(p.ans) + (p.unit ? ' ' + p.unit : '')); }
   // 누적 출제: 오늘의 차시(cur) 문제 55% + 이전 차시(1~cur−1) 문제 45%
+  // 반복 막기: 최근 40문제와 똑같은 문제, 바로 앞과 같은 유형은 다시 뽑아요(최대 15번)
+  var RECENT = [], LASTT = '';
+  function qkey(p) { return p.q + '|' + (p.opts ? p.opts.slice().sort().join('/') + '|' + p.opts[p.ans] : p.ans) + '|' + (p.fig || ''); }
+  function remember(p) { RECENT.push(qkey(p)); if (RECENT.length > 40) RECENT.shift(); LASTT = p.type; return p; }
   function genCum(cur, star) {
-    var L = cur;
-    if (cur > 1 && rnd() >= 0.55) L = ri(1, Math.min(cur - 1, 9));
-    var p = gen(L, star); if (L !== cur && !p.from) p.from = p.L; p.cur = cur; return p;
+    var best = null;
+    for (var k = 0; k < 15; k++) {
+      var L = cur;
+      if (cur > 1 && rnd() >= 0.55) L = ri(1, Math.min(cur - 1, 9));
+      var p = gen(L, star); if (L !== cur && !p.from) p.from = p.L; p.cur = cur;
+      var fresh = RECENT.indexOf(qkey(p)) < 0;
+      if (!best || (fresh && best._old)) { best = p; best._old = !fresh; }
+      if (fresh && p.type !== LASTT) { best = p; best._old = false; break; }
+    }
+    delete best._old; return remember(best);
   }
   // 비슷한 문제: 같은 차시·같은 난이도의 다른 유형(없으면 같은 유형 새 숫자)
   function similar(p) {
     var L = p.from || p.L, c = LIST.filter(function (t) { return t.L === L && t.star === p.star && t.id !== p.type; });
-    var t = c.length ? pick(c) : T[p.type], q = t.make(); q.type = t.id; q.L = t.L; q.star = t.star; return q;
+    var t = c.length ? pick(c) : T[p.type], q = t.make(); q.type = t.id; q.L = t.L; q.star = t.star; return remember(q);
   }
   return { gen: gen, genCum: genCum, similar: similar, genType: genType, check: check, ansText: ansText, types: T, list: LIST, setSeed: setSeed, rnd: rnd, ri: ri, pick: pick, shuffle: shuffle, f: f, r2: r2, measure: measure, fig: { circlePart: circlePart, hexFig: hexFig, sqFig: sqFig, tableFig: tableFig } };
 })();
@@ -941,7 +1136,7 @@ function newSave(name, cls) {
   return fixSave(s);
 }
 function fixSave(s) {
-  s.inv = s.inv || []; s.eq = s.eq || {}; s.les = s.les || {}; s.wrong = s.wrong || []; s.ty = s.ty || {}; s.ls = s.ls || {}; s.bs = s.bs || {};
+  s.inv = s.inv || []; s.eq = s.eq || {}; s.les = s.les || {}; s.wrong = s.wrong || []; s.ty = s.ty || {}; s.ls = s.ls || {}; s.bs = s.bs || {}; s.bk = s.bk || {};
   ['ok', 'n', 'tr', 'rush'].forEach(function (k) { s[k] = +s[k] || 0; }); if (s.en == null) s.en = 10; s.en = +s.en || 0;
   for (var n = 1; n <= 10; n++) { var L = s.les[n] = s.les[n] || {}; L.best = L.best || 0; L.clears = L.clears || 0; L.ok = L.ok || 0; L.n = L.n || 0; L.stars = L.stars || [0, 0, 0]; L.runs = L.runs || 0; L.kills = L.kills || 0; }
   ['coin', 'gem', 'uid', 'runs'].forEach(function (k) { s[k] = +s[k] || 0; });
@@ -1399,29 +1594,18 @@ function spawn(dt) {
   var t = B.t, ev = B.events;
   if (B.cleared) return;
   var bossOn = B.boss && B.boss.hp > 0;
-  var rate = Math.min(11, 0.6 + t / 30 + Math.max(0, t - 150) / 45) * (bossOn ? 0.35 : 1);
+  var rate = Math.min(12, 1.1 + t / 30 + Math.max(0, t - 150) / 45) * (bossOn ? 0.35 : densityMul(t));   // 처음부터 적이 꽤 나오고, 화면이 비면 더 보내요
   B.spawnAcc += rate * dt;
   while (B.spawnAcc >= 1) {
-    B.spawnAcc -= 1; if (B.en.length >= 210) break;
-    var r = Math.random(), type = 'tri';
-    if (t > 170 && r < 0.18) type = 'hex'; else if (t > 80 && r < 0.38) type = 'pent'; else if (t > 25 && r < 0.65) type = 'sq';
-    var p = ringPos(); spawnAt(type, p[0], p[1]);
+    B.spawnAcc -= 1; if (B.en.length >= 220) break;
+    var p = ringPos(); spawnAt(mobKind(t), p[0], p[1]);
   }
-  // 포위 공격
-  [[60, 'tri', 22], [125, 'sq', 26], [215, 'pent', 28]].forEach(function (w) {
-    if (t >= w[0] && !ev['w' + w[0]]) { ev['w' + w[0]] = 1; banner('⚠️ 다각형 군단이 둘러쌌어요!'); var R = Math.min(VW, VH) / 2 / ZOOM + 30; var gap = Math.floor(Math.random() * w[2]); for (var i = 0; i < w[2]; i++) { if (Math.abs(i - gap) < 3) continue; var a = Math.PI * 2 * i / w[2];   // 빠져나갈 틈을 남겨요
- spawnAt(w[1], B.h.x + Math.cos(a) * R, B.h.y + Math.sin(a) * R); } }
-  });
-  [100, 200].forEach(function (s) { if (t >= s && !ev['s' + s]) { ev['s' + s] = 1; var p = ringPos(); spawnAt('star', p[0], p[1]); toast('⭐ 별 정예가 나타났어요! 물리치면 보석 상자를 줘요.', 2.5); } });
+  runEvents(t);   // 판마다 다른 사건(포위·돌진 떼·황금 동글·보석 비·화살 부대) + ⭐ 별 정예
   // ❓ 문제 상자: 선생님이 정한 간격(보통 20초 · 많이 12초 · 아주 많이 8초)마다 내 근처에 떨어져요(30초 뒤 사라짐)
   B.boxT -= dt;
   if (B.boxT <= 0) { B.boxT = qcfg().box; if (B.boxes.length < qcfg().boxMax) { var ba = Math.random() * Math.PI * 2, bd = 110 + Math.random() * 70; B.boxes.push({ x: B.h.x + Math.cos(ba) * bd, y: B.h.y + Math.sin(ba) * bd, t: 0 }); } }
-  if (t >= BOSS1_T && !ev.b1) { ev.b1 = 1; bossIn('boss1'); }
-  if (t >= BOSS2_T && !ev.b2) { ev.b2 = 1; bossIn('boss2'); }
-}
-function bossIn(type) {
-  var p = ringPos(-60), o = spawnAt(type, p[0], p[1], 1); o.atkT = 3; o.dashT = 0; o.name = EN[type].name; o.thr = type === 'boss1' ? [0.5] : [0.66, 0.33];   // 체력이 여기까지 떨어지면 🛡️ 방패
-  B.boss = o; beep('boss'); banner('👑 ' + o.name + ' 등장!'); $('#bossBar').classList.remove('hide'); $('#bossName').textContent = o.name;
+  if (t >= BOSS1_T && !ev.b1) { ev.b1 = 1; bossIn(1); }
+  if (t >= BOSS2_T && !ev.b2) { ev.b2 = 1; bossIn(2); }
 }
 
 /* ---------- 충돌 격자 ---------- */
@@ -1457,8 +1641,11 @@ function kill(e) {
   var big = e.boss || EN[e.type].star;
   if (big) {
     var cnt = e.boss ? 14 : 6; for (var i = 0; i < cnt; i++) B.gems.push({ x: e.x + (Math.random() - 0.5) * 60, y: e.y + (Math.random() - 0.5) * 60, v: Math.ceil(e.xp / cnt), k: 'gem', c: 2 });
-    if (e.boss) { B.bossKills++; B.chest = { x: e.x, y: e.y, boss: e.boss, t: 0 }; if (B.boss === e) { B.boss = null; $('#bossBar').classList.add('hide'); } banner('👑 ' + e.name + ' 격파! 보물 상자를 주워요'); if (e.boss === 2) { B.cleared = true; B.endT = B.t + 0.5; } }
+    if (e.boss) { bossDex(e); B.bossKills++; B.chest = { x: e.x, y: e.y, boss: e.boss, t: 0 }; if (B.boss === e) { B.boss = null; $('#bossBar').classList.add('hide'); } banner('👑 ' + e.name + ' 격파! 보물 상자를 주워요'); if (e.boss === 2) { B.cleared = true; B.endT = B.t + 0.5; } }
     else { B.gems.push({ x: e.x, y: e.y, v: 40, k: 'coin' }); B.gems.push({ x: e.x + 14, y: e.y, k: 'mag' }); }
+  } else if (e.type === 'gold') {   // 황금 동글: 코인·보석 듬뿍
+    for (var gi = 0; gi < 8; gi++) B.gems.push({ x: e.x + (Math.random() - 0.5) * 50, y: e.y + (Math.random() - 0.5) * 50, v: Math.ceil(e.xp / 4), k: gi < 4 ? 'gem' : 'coin', c: 2 });
+    B.gems.push({ x: e.x, y: e.y, v: 30, k: 'coin' }); banner('✨ 황금 동글을 잡았어요!');
   } else {
     B.gems.push({ x: e.x, y: e.y, v: e.xp, k: 'gem', c: e.xp >= 4 ? 2 : e.xp >= 2 ? 1 : 0 });
     var r = Math.random(); if (r < 0.03) B.gems.push({ x: e.x + 8, y: e.y, v: 5, k: 'coin' }); else if (r < 0.034) B.gems.push({ x: e.x, y: e.y + 8, k: 'heart' }); else if (r < 0.0365) B.gems.push({ x: e.x, y: e.y - 8, k: 'mag' });
@@ -1598,35 +1785,25 @@ function enemies(dt) {
     var e = B.en[i];
     if (e.dead) { B.en.splice(i, 1); continue; }
     var dx = h.x - e.x, dy = h.y - e.y, d = Math.hypot(dx, dy) || 1;
+    if (d > 1400 && (e.line || e.type === 'gold')) { e.dead = true; continue; }   // 지나간 돌진 떼·도망간 황금 동글
     if (d > 1400 && !e.boss) { var p = ringPos(); e.x = p[0]; e.y = p[1]; continue; }   // 너무 멀어진 적은 다시 앞으로
     var sp = e.spd;
-    if (e.boss) bossAI(e, dt, dx / d, dy / d, d);
-    if (!e.dashing) { e.x += (dx / d * sp + e.kx) * dt; e.y += (dy / d * sp + e.ky) * dt; }
+    var moved = e.boss ? bossAI(e, dt, dx / d, dy / d, d) : EN[e.type].ai || e.line ? mobAI(e, dt, dx / d, dy / d, d) : false;
+    if (e.dead) continue;
+    if (!moved && !e.dashing) { e.x += dx / d * sp * dt; e.y += dy / d * sp * dt; }
+    if (!e.dashing) { e.x += e.kx * dt; e.y += e.ky * dt; }
     e.kx *= Math.pow(0.02, dt); e.ky *= Math.pow(0.02, dt);
     if (e.fl > 0) e.fl -= dt;
     // 서로 밀어내기(같은 칸 몇 개만)
     var a = B.G[Math.floor(e.x / GS) + ',' + Math.floor(e.y / GS)];
     if (a) for (var j = 0, c = 0; j < a.length && c < 5; j++) { var o = a[j]; if (o === e || o.dead) continue; c++; var ox = e.x - o.x, oy = e.y - o.y, od = Math.hypot(ox, oy), mn = e.r + o.r; if (od > 0 && od < mn) { var push = (mn - od) * (e.boss ? 0.05 : 0.5); e.x += ox / od * push; e.y += oy / od * push; } }
     // 닿으면 아파요
-    if (d < e.r + h.r - 2 && h.inv <= 0 && !B.cleared) {
+    if (e.dmg > 0 && d < e.r + h.r - 2 && h.inv <= 0 && !B.cleared) {
       h.hp -= e.dmg * (1 - dr) * (0.55 + B.t / 300); h.inv = 0.45; beep('hurt'); B.fx.push({ k: 'hurt', t: 0, life: 0.25 });
       if (h.hp <= 0) { h.hp = 0; dead(); return; }
     }
   }
 }
-function bossAI(e, dt, nx, ny, d) {
-  e.atkT -= dt;
-  if (e.dashing) { e.x += e.dvx * dt; e.y += e.dvy * dt; e.dashing -= dt; if (e.dashing <= 0) e.dashing = 0; return; }
-  if (e.atkT <= 0) {
-    e.atkT = e.boss === 2 ? 3.2 : 4;
-    if (e.boss === 1 || Math.random() < 0.4) { B.fx.push({ k: 'warn', x: e.x, y: e.y, a: Math.atan2(ny, nx), t: 0, life: 0.7, onEnd: function () { e.dashing = 0.55; e.dvx = nx * 520; e.dvy = ny * 520; } }); }
-    else { // 원 모양으로 퍼지는 탄
-      for (var i = 0; i < 16; i++) { var a = Math.PI * 2 * i / 16; B.fx.push({ k: 'ebul', x: e.x, y: e.y, vx: Math.cos(a) * 160, vy: Math.sin(a) * 160, t: 0, life: 3.5 }); }
-      for (i = 0; i < 4; i++) { var p = [e.x + (Math.random() - 0.5) * 120, e.y + (Math.random() - 0.5) * 120]; spawnAt('sq', p[0], p[1]); }
-    }
-  }
-}
-
 /* ---------- 줍기 ---------- */
 function pickups(dt) {
   var h = B.h, M = B.D.mag;
@@ -1643,7 +1820,7 @@ function pickups(dt) {
   }
   if (B.gems.length > 500) B.gems.splice(0, B.gems.length - 500);
   // 적의 탄
-  for (i = B.fx.length - 1; i >= 0; i--) { var f = B.fx[i]; if (f.k !== 'ebul') continue; f.x += f.vx * dt; f.y += f.vy * dt; if (Math.hypot(f.x - h.x, f.y - h.y) < h.r + 6 && h.inv <= 0) { h.hp -= 14 * diffDmg(B.L) * (1 - B.st.dr); h.inv = 0.45; beep('hurt'); f.t = f.life; if (h.hp <= 0) { h.hp = 0; dead(); return; } } }
+  for (i = B.fx.length - 1; i >= 0; i--) { var f = B.fx[i]; if (f.k !== 'ebul') continue; f.x += f.vx * dt; f.y += f.vy * dt; if (Math.hypot(f.x - h.x, f.y - h.y) < h.r + 6 && h.inv <= 0) { h.hp -= (f.dmg || 14) * diffDmg(B.L) * (1 - B.st.dr); h.inv = 0.45; beep('hurt'); f.t = f.life; if (h.hp <= 0) { h.hp = 0; dead(); return; } } }
   // 문제 상자 줍기
   for (i = B.boxes.length - 1; i >= 0; i--) { var bx = B.boxes[i]; bx.t += dt; if (bx.t > 30) { B.boxes.splice(i, 1); continue; } var bdd = Math.hypot(h.x - bx.x, h.y - bx.y); if (bdd < 90) { bx.x += (h.x - bx.x) / bdd * 160 * dt; bx.y += (h.y - bx.y) / bdd * 160 * dt; }   // 가까이 가면 끌려와요
  if (Math.hypot(bx.x - h.x, bx.y - h.y) < h.r + 16) { B.boxes.splice(i, 1); beep('open'); openBox(); return; } }
@@ -1683,10 +1860,11 @@ function render(T) {
   // 적
   for (i = 0; i < B.en.length; i++) {
     var e = B.en[i]; if (!vis(e.x, e.y, e.r + 10)) continue;
-    if (e.boss) { drawBoss(c, e, T); continue; }
+    if (e.boss) { drawBoss(c, e, T); drawBossExtra(c, e, T); continue; }
     var sp = SPR[e.fl > 0 ? e.type + '_f' : e.type]; c.drawImage(sp.cv, e.x - sp.s / 2, e.y - sp.s / 2, sp.s, sp.s);
     if (EN[e.type].star) { bar(c, e.x - 18, e.y - e.r - 10, 36, 5, e.hp / e.max, '#ffbe0b'); }
   }
+  drawZones(c, T);
   // 경고(보스 돌진)
   B.fx.forEach(function (f) { if (f.k === 'warn') { c.save(); c.translate(f.x, f.y); c.rotate(f.a); c.globalAlpha = 0.25 + 0.25 * Math.sin(f.t * 30); c.fillStyle = '#ff3b30'; c.fillRect(0, -30, 300, 60); c.restore(); } });
   // 동글 지뢰
@@ -1716,6 +1894,7 @@ function render(T) {
     else if (f.k === 'bolt') { c.globalAlpha = 1 - k; c.lineJoin = 'round'; c.beginPath(); f.pts.forEach(function (pt, j) { if (!j) c.moveTo(pt[0], pt[1]); else { var pp = f.pts[j - 1], mx2 = (pp[0] + pt[0]) / 2 + (Math.random() - 0.5) * 16, my2 = (pp[1] + pt[1]) / 2 + (Math.random() - 0.5) * 16; c.lineTo(mx2, my2); c.lineTo(pt[0], pt[1]); } }); c.lineWidth = 6; c.strokeStyle = '#ffd166'; c.stroke(); c.lineWidth = 2; c.strokeStyle = '#fff'; c.stroke(); c.globalAlpha = 1; }
     else if (f.k === 'pop') { c.globalAlpha = 1 - k; c.beginPath(); c.arc(f.x, f.y, f.r * (1 + k), 0, 7); c.strokeStyle = f.c; c.lineWidth = 3; c.stroke(); c.globalAlpha = 1; }
     else if (f.k === 'ebul') { c.beginPath(); c.arc(f.x, f.y, 6, 0, 7); fillStroke(c, '#ff4d6d', 2); }
+    else drawFxExtra(c, f, k);
   });
   // 피해 숫자
   c.font = 'bold 15px Jua, sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.lineWidth = 3; c.strokeStyle = INKC;
@@ -1724,6 +1903,7 @@ function render(T) {
   c.restore();
   // 화면 효과
   if (B.fx.some(function (f) { return f.k === 'hurt'; })) { c.fillStyle = 'rgba(255,0,0,.12)'; c.fillRect(0, 0, VW, VH); }
+  drawGoldArrow(c, h);
   // 보스 방향 화살표
   if (B.boss && B.boss.hp > 0) { var bx = (B.boss.x - h.x) * ZOOM, by = (B.boss.y - h.y) * ZOOM; if (Math.abs(bx) > VW / 2 || Math.abs(by) > VH / 2) { var ang = Math.atan2(by, bx), r = Math.min(VW, VH) / 2 - 40; c.save(); c.translate(VW / 2 + Math.cos(ang) * r, VH / 2 + Math.sin(ang) * r); c.rotate(ang); c.beginPath(); c.moveTo(16, 0); c.lineTo(-10, -12); c.lineTo(-10, 12); c.closePath(); fillStroke(c, '#ff3b30', 3); c.restore(); } }
   B.boxes.forEach(function (bx) { var ax = (bx.x - h.x) * ZOOM, ay = (bx.y - h.y) * ZOOM; if (Math.abs(ax) > VW / 2 - 10 || Math.abs(ay) > VH / 2 - 10) { var ang = Math.atan2(ay, ax), rr = Math.min(VW, VH) / 2 - 50; c.save(); c.translate(VW / 2 + Math.cos(ang) * rr, VH / 2 + Math.sin(ang) * rr); c.rotate(ang); c.beginPath(); c.moveTo(14, 0); c.lineTo(-8, -10); c.lineTo(-8, 10); c.closePath(); fillStroke(c, '#7b61ff', 3); c.restore(); } });
@@ -1849,6 +2029,211 @@ function shieldFlow(e) {
       next: function () { return okN >= need ? '💥 방패 깨기!' : '다음 문제 ▶'; }, done: function () { step(); }, retry: null });
   }
   step();
+}
+
+/* ===== 보스 7종 · 새 적 · 판마다 달라지는 사건 =====
+   중간 보스(2:30) 4종 중 하나, 최종 보스(4:30) 3종 중 하나가 판마다 무작위로 나와요(바로 전 판과 같은 보스는 피해요).
+   보스마다 움직임과 공격 순서가 다르고, 체력이 1/3 아래로 떨어지면 😡 분노해서 공격이 빨라져요. */
+var PI2 = Math.PI * 2;
+Object.assign(EN, {
+  b_oct: { n: 8, r: 48, hp: 2400, spd: 50, dmg: 22, xp: 60, c: '#ff8c42', rot: Math.PI / 8, boss: 1, name: '정팔각형 돌격대장' },
+  b_tri: { n: 3, r: 46, hp: 2100, spd: 82, dmg: 20, xp: 60, c: '#ff5d73', rot: -Math.PI / 2, boss: 1, name: '정삼각형 저격수' },
+  b_sq: { n: 4, r: 50, hp: 2600, spd: 38, dmg: 22, xp: 60, c: '#4c6ef5', rot: Math.PI / 4, boss: 1, name: '정사각형 소환술사' },
+  b_pent: { n: 5, r: 48, hp: 2300, spd: 100, dmg: 20, xp: 60, c: '#9b5de5', rot: -Math.PI / 2, boss: 1, name: '정오각형 회오리' },
+  b_12: { n: 12, r: 60, hp: 5500, spd: 44, dmg: 28, xp: 120, c: '#7b2cbf', rot: 0, boss: 2, name: '정십이각형 대왕' },
+  b_10: { n: 10, r: 60, hp: 5200, spd: 42, dmg: 26, xp: 120, c: '#e85d04', rot: 0, boss: 2, name: '정십각형 폭격왕' },
+  b_9: { n: 9, r: 58, hp: 5000, spd: 52, dmg: 26, xp: 120, c: '#0f9d8a', rot: -Math.PI / 2, boss: 2, name: '정구각형 수호왕' },
+  // 새 일반 적
+  gun: { n: 7, r: 17, hp: 60, spd: 42, dmg: 10, xp: 5, c: '#f77f00', rot: -Math.PI / 2, ai: 'gun' },        // 멈춰 서서 탄을 쏴요
+  arrow: { n: 3, r: 12, hp: 16, spd: 62, dmg: 9, xp: 2, c: '#ff006e', rot: -Math.PI / 2, ai: 'arrow' },  // 잠깐 멈췄다가 휙 돌진
+  gold: { n: 16, r: 15, hp: 160, spd: 118, dmg: 0, xp: 30, c: '#ffd166', rot: 0, ai: 'gold' }              // 도망가는 황금 동글
+});
+var BD = {
+  b_oct: { pats: ['dash', 'dash', 'ring'], cd: 3.4, hint: '빨간 길이 보이면 옆으로 비켜요!' },
+  b_tri: { move: 'kite', pats: ['fan', 'fan', 'blink'], cd: 2.4, hint: '멀리서 부채꼴로 쏴요. 탄 사이 틈으로 피하고, 순간 이동도 조심!' },
+  b_sq: { pats: ['summon', 'slam3', 'slam3'], cd: 3.4, hint: '빨간 원이 터지기 전에 원 밖으로 나가요!' },
+  b_pent: { move: 'orbit', pats: ['spiral', 'fan'], cd: 3.6, hint: '내 주위를 돌며 회오리 탄을 쏴요. 탄의 빈틈을 찾아요!' },
+  b_12: { pats: ['dash', 'ring2', 'summon', 'dash'], cd: 3.0, hint: '돌진과 두 겹 원형 탄! 계속 움직여요.' },
+  b_10: { pats: ['slam5', 'fan', 'slam5', 'ring'], cd: 2.9, hint: '빨간 원이 여러 개 떨어져요! 빈 곳을 찾아 움직여요.' },
+  b_9: { guard: 4, pats: ['spiral', 'dash', 'fan'], cd: 3.1, hint: '몸 주위를 도는 방패 4개에 닿지 않게 조심!' }
+};
+var BPOOL = { 1: ['b_oct', 'b_tri', 'b_sq', 'b_pent'], 2: ['b_12', 'b_10', 'b_9'] };
+function pickBoss(tier) {   // 바로 전 판과 다른 보스
+  var pool = BPOOL[tier], last = Store.get('lastBoss' + tier, ''), c = pool.filter(function (k) { return k !== last; });
+  var k = c[Math.floor(Math.random() * c.length)] || pool[0]; Store.set('lastBoss' + tier, k); return k;
+}
+function bossIn(tier) {
+  var type = pickBoss(tier), p = ringPos(-60), o = spawnAt(type, p[0], p[1], 1);
+  o.atkT = 2.5; o.name = EN[type].name; o.thr = tier === 1 ? [0.5] : [0.66, 0.33]; o.pi = Math.floor(Math.random() * BD[type].pats.length); o.sd = Math.random() < 0.5 ? 1 : -1; o.ga = 0;
+  B.boss = o; beep('boss'); banner('👑 ' + o.name + ' 등장!'); toast('💡 ' + BD[type].hint, 4.5);
+  $('#bossBar').classList.remove('hide'); $('#bossName').textContent = o.name + (S.bk && S.bk[type] ? '' : ' 🆕');
+}
+// 주인공이 맞을 때(보스 기술·방패)
+function heroHit(amt) {
+  var h = B.h; if (B.cleared || h.inv > 0 || B.over) return;
+  h.hp -= amt * diffDmg(B.L) * (1 - B.st.dr); h.inv = 0.45; beep('hurt'); B.fx.push({ k: 'hurt', t: 0, life: 0.25 });
+  if (h.hp <= 0) { h.hp = 0; dead(); }
+}
+function ebul(x, y, a, sp, dmg) { B.fx.push({ k: 'ebul', x: x, y: y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, t: 0, life: 3.5, dmg: dmg || 14 }); }
+function later(sec, fn) { B.fx.push({ k: 'delay', t: 0, life: sec, onEnd: fn }); }
+
+function bossAI(e, dt, nx, ny, d) {
+  var D = BD[e.type] || BD.b_oct; e.atkT -= dt;
+  if (!e.rage && e.hp <= e.max * 0.33 && !e.shield) { e.rage = true; banner('😡 ' + e.name + ' 분노! 공격이 빨라져요'); }
+  if (D.guard) guards(e, dt);
+  if (e.spiral > 0) spiralTick(e, dt);
+  if (e.dashing) { e.x += e.dvx * dt; e.y += e.dvy * dt; e.dashing -= dt; if (e.dashing <= 0) e.dashing = 0; return true; }
+  if (e.hold > 0) { e.hold -= dt; return true; }   // 기술을 쓰는 동안은 멈춰요
+  if (e.atkT <= 0) { e.atkT = D.cd * (e.rage ? 0.7 : 1); bossPat(e, D.pats[e.pi++ % D.pats.length], nx, ny); if (e.hold > 0 || e.dashing) return true; }
+  var sp = e.spd * (e.rage ? 1.15 : 1);
+  if (D.move === 'kite') {   // 거리를 두고 옆으로 돌아요
+    var want = d < 220 ? -1 : d > 340 ? 1 : 0;
+    e.x += (nx * want * sp + -ny * e.sd * sp * 0.7) * dt; e.y += (ny * want * sp + nx * e.sd * sp * 0.7) * dt;
+    if ((e.flipT = (e.flipT || 0) + dt) > 3) { e.flipT = 0; e.sd *= -1; }
+    return true;
+  }
+  if (D.move === 'orbit') {  // 내 둘레를 원 모양으로 돌아요
+    var rad = Math.max(-1, Math.min(1, (d - 230) / 80));
+    e.x += (-ny * e.sd * sp + nx * rad * sp) * dt; e.y += (nx * e.sd * sp + ny * rad * sp) * dt;
+    return true;
+  }
+  return false;
+}
+function bossPat(e, p, nx, ny) {
+  var h = B.h, a0 = Math.atan2(ny, nx), i, n;
+  if (p === 'dash') { e.hold = 0.75; B.fx.push({ k: 'warn', x: e.x, y: e.y, a: a0, t: 0, life: 0.7, onEnd: function () { var dx = B.h.x - e.x, dy = B.h.y - e.y, l = Math.hypot(dx, dy) || 1; if (Math.abs(Math.atan2(dy, dx) - a0) > 0.6) { dx = Math.cos(a0); dy = Math.sin(a0); l = 1; } e.dashing = 0.55; e.dvx = dx / l * 520; e.dvy = dy / l * 520; } }); }
+  else if (p === 'ring' || p === 'ring2') {
+    n = e.rage ? 24 : 16; var off = Math.random() * PI2;
+    for (i = 0; i < n; i++) ebul(e.x, e.y, off + PI2 * i / n, 160);
+    if (p === 'ring2') later(0.45, function () { if (e.dead) return; for (var j = 0; j < n; j++) ebul(e.x, e.y, off + PI2 * (j + 0.5) / n, 160); });
+    e.hold = 0.3;
+  }
+  else if (p === 'fan') { n = e.rage ? 7 : 5; for (i = 0; i < n; i++) ebul(e.x, e.y, a0 + (i - (n - 1) / 2) * 0.22, 230); e.hold = 0.35; }
+  else if (p === 'spiral') { e.spiral = 2.4; e.spA = Math.random() * PI2; e.spAcc = 0; e.hold = 2.4; }
+  else if (p === 'summon') {
+    n = e.rage ? 5 : 4; var ty = B.t > 220 ? 'pent' : 'sq';
+    for (i = 0; i < n; i++) { var a = PI2 * i / n; spawnAt(ty, e.x + Math.cos(a) * (e.r + 40), e.y + Math.sin(a) * (e.r + 40)); }
+    B.fx.push({ k: 'pop', x: e.x, y: e.y, r: e.r + 30, c: EN[e.type].c, t: 0, life: 0.4 }); e.hold = 0.5;
+  }
+  else if (p === 'slam3' || p === 'slam5') {
+    n = p === 'slam3' ? 3 : 5; if (e.rage) n++;
+    for (i = 0; i < n; i++) { var ang = Math.random() * PI2, dd = i ? 70 + Math.random() * 120 : 0; zone(h.x + Math.cos(ang) * dd, h.y + Math.sin(ang) * dd, 72, e.rage ? 1 : 1.2, 16); }
+    e.hold = 0.6;
+  }
+  else if (p === 'blink') {
+    var ba = Math.random() * PI2, tx = h.x + Math.cos(ba) * 210, ty2 = h.y + Math.sin(ba) * 210; e.hold = 0.7;
+    B.fx.push({ k: 'blinkp', x: tx, y: ty2, r: e.r, t: 0, life: 0.65, onEnd: function () { if (e.dead) return; B.fx.push({ k: 'pop', x: e.x, y: e.y, r: e.r, c: EN[e.type].c, t: 0, life: 0.3 }); e.x = tx; e.y = ty2; var a = Math.atan2(B.h.y - ty2, B.h.x - tx); for (var j = 0; j < 5; j++) ebul(tx, ty2, a + (j - 2) * 0.22, 230); } });
+  }
+}
+function zone(x, y, R, life, dmg) {   // 빨간 원: 시간이 지나면 터져요
+  B.fx.push({ k: 'zone', x: x, y: y, R: R, t: 0, life: life, onEnd: function () {
+    B.fx.push({ k: 'zboom', x: x, y: y, R: R, t: 0, life: 0.35 }); beep('boom');
+    if (Math.hypot(B.h.x - x, B.h.y - y) < R + B.h.r * 0.5) heroHit(dmg);
+  } });
+}
+function spiralTick(e, dt) {
+  e.spiral -= dt; e.spAcc += dt; var arms = e.rage ? 3 : 2;
+  while (e.spAcc >= 0.11) { e.spAcc -= 0.11; for (var k = 0; k < arms; k++) ebul(e.x, e.y, e.spA + PI2 * k / arms, 150); e.spA += 0.32 * e.sd; }
+}
+function guards(e, dt) {   // 정구각형 수호왕의 방패 4개
+  e.ga += dt * (e.rage ? 3.2 : 2.4); e.gp = [];
+  for (var i = 0; i < 4; i++) { var a = e.ga + PI2 * i / 4, R = e.r + 42, x = e.x + Math.cos(a) * R, y = e.y + Math.sin(a) * R; e.gp.push([x, y]); if (Math.hypot(B.h.x - x, B.h.y - y) < 14 + B.h.r) heroHit(16); }
+}
+
+// 새 일반 적의 움직임(true면 직접 움직였어요)
+function mobAI(e, dt, nx, ny, d) {
+  var t = EN[e.type].ai;
+  if (e.line) { e.x += e.vx * dt; e.y += e.vy * dt; return true; }
+  if (t === 'gun') {
+    if (d > 240) return false;
+    e.ft = (e.ft == null ? 1 + Math.random() : e.ft) - dt;
+    if (e.ft <= 0) { e.ft = 2.8; ebul(e.x, e.y, Math.atan2(ny, nx), 160, 8); e.fl = 0.1; }
+    return true;
+  }
+  if (t === 'arrow') {
+    if (e.charge > 0) { e.charge -= dt; e.x += e.cvx * dt; e.y += e.cvy * dt; return true; }
+    if (e.wind > 0) { e.wind -= dt; e.fl = 0.05; if (e.wind <= 0) { e.charge = 0.5; e.cvx = nx * 280; e.cvy = ny * 280; } return true; }
+    e.ct = (e.ct == null ? 1 + Math.random() * 2 : e.ct) - dt;
+    if (e.ct <= 0 && d < 300) { e.wind = 0.6; e.ct = 3.2 + Math.random(); return true; }
+    return false;
+  }
+  if (t === 'gold') {
+    e.life -= dt; if (e.life <= 0) { e.dead = true; toast('💨 황금 동글이 도망갔어요…', 1.6); return true; }
+    var w = Math.sin(B.t * 3 + e.id) * 0.6; e.x += (-nx + -ny * w) * e.spd * dt; e.y += (-ny + nx * w) * e.spd * dt;
+    return true;
+  }
+  return false;
+}
+
+// 판마다 달라지는 사건: 0:50 · 1:45 · 3:20 · 4:00 (1:45는 늘 ⭐ 별 정예)
+var EVENTS = {
+  siege: function () {
+    banner('⚠️ 다각형 군단이 둘러쌌어요!'); var ty = B.t > 190 ? 'pent' : B.t > 100 ? 'sq' : 'tri', N = B.t > 190 ? 28 : 24;
+    var R = Math.min(VW, VH) / 2 / ZOOM + 30, gap = Math.floor(Math.random() * N);
+    for (var i = 0; i < N; i++) { if (Math.abs(i - gap) < 3) continue; var a = PI2 * i / N; spawnAt(ty, B.h.x + Math.cos(a) * R, B.h.y + Math.sin(a) * R); }
+  },
+  star: function () { var p = ringPos(); spawnAt('star', p[0], p[1]); toast('⭐ 별 정예가 나타났어요! 물리치면 코인과 자석을 줘요.', 2.5); },
+  stampede: function () {   // 한쪽에서 돌진 떼가 줄지어 지나가요
+    banner('🐾 돌진 떼가 지나가요! 옆으로 피해요'); var a = Math.random() * PI2, R = Math.hypot(VW, VH) / 2 / ZOOM + 40, ux = Math.cos(a), uy = Math.sin(a), ty = B.t > 150 ? 'sq' : 'tri';
+    for (var row = 0; row < 3; row++) for (var i = -5; i <= 5; i++) { var o = spawnAt(ty, B.h.x - ux * (R + row * 40) + -uy * i * 34, B.h.y - uy * (R + row * 40) + ux * i * 34); o.line = 1; o.vx = ux * 210; o.vy = uy * 210; }
+  },
+  gold: function () { var ga = Math.random() * PI2, o = spawnAt('gold', B.h.x + Math.cos(ga) * 170, B.h.y + Math.sin(ga) * 170); B.gold = o; o.life = 18; banner('✨ 황금 동글 등장! 도망가기 전에 잡아요'); },
+  shower: function () {
+    toast('💎 보석 비가 내려요! 얼른 주워요', 2.2);
+    for (var i = 0; i < 26; i++) { var a = Math.random() * PI2, d = 60 + Math.random() * 200; B.gems.push({ x: B.h.x + Math.cos(a) * d, y: B.h.y + Math.sin(a) * d, v: 3 + Math.floor(B.t / 60), k: 'gem', c: 1 }); }
+    if (Math.random() < 0.5) B.gems.push({ x: B.h.x + 90, y: B.h.y, k: 'heart' });
+  },
+  arrows: function () {
+    banner('🏹 돌격 화살 부대!'); var a = Math.random() * PI2, R = Math.min(VW, VH) / 2 / ZOOM + 40;
+    for (var i = 0; i < 9; i++) { var b = a + (i - 4) * 0.14; spawnAt('arrow', B.h.x + Math.cos(b) * R, B.h.y + Math.sin(b) * R); }
+  }
+};
+function planEvents() {   // 출격할 때 사건 순서를 정해요
+  var pool = ['siege', 'stampede', 'gold', 'shower', 'arrows'].sort(function () { return Math.random() - 0.5; });
+  return [[50, pool[0]], [105, 'star'], [200, pool[1]], [215, 'star'], [240, pool[2]]];
+}
+function runEvents(t) {
+  if (!B.plan) B.plan = planEvents();
+  B.plan.forEach(function (p) { if (t >= p[0] && !B.events['e' + p[0]]) { B.events['e' + p[0]] = 1; (EVENTS[p[1]] || EVENTS.star)(); } });
+}
+// 화면 안에 적이 너무 적으면 더 보내요(강한 친구도 심심하지 않게)
+function densityMul(t) {
+  if (!B._dT || B.t - B._dT > 1) {
+    B._dT = B.t; var on = 0, hw = VW / 2 / ZOOM + 40, hh = VH / 2 / ZOOM + 40;
+    for (var i = 0; i < B.en.length; i++) { var e = B.en[i]; if (!e.dead && Math.abs(e.x - B.h.x) < hw && Math.abs(e.y - B.h.y) < hh) on++; }
+    var want = 5 + t / 15; B._dm = on < want * 0.5 ? 1.7 : on < want ? 1.25 : 1;
+  }
+  return B._dm || 1;
+}
+function mobKind(t) {   // 일반 적 고르기
+  var r = Math.random();
+  if (t > 90 && r < 0.05 && B.en.filter(function (e) { return e.type === 'gun'; }).length < 4) return 'gun';
+  if (t > 40 && r < 0.10) return 'arrow';
+  r = Math.random();
+  if (t > 170 && r < 0.18) return 'hex'; if (t > 80 && r < 0.38) return 'pent'; if (t > 25 && r < 0.65) return 'sq';
+  return 'tri';
+}
+function bossDex(e) {   // 👑 보스 도감: 처음 물리치면 💎30
+  S.bk = S.bk || {}; var first = !S.bk[e.type]; S.bk[e.type] = (S.bk[e.type] | 0) + 1;
+  if (first) { B.gem += 30; setTimeout(function () { toast('📖 보스 도감에 「' + e.name + '」 등록! 💎30', 3); }, 1200); }
+}
+function drawBossExtra(c, e, T) {
+  if (e.rage) { c.beginPath(); c.arc(e.x, e.y, e.r + 8 + Math.sin(T * 14) * 3, 0, 7); c.lineWidth = 4; c.strokeStyle = 'rgba(255,59,48,.7)'; c.stroke(); }
+  if (e.gp) e.gp.forEach(function (g) { c.beginPath(); c.arc(g[0], g[1], 14, 0, 7); fillStroke(c, '#7ae0c3', 3); c.beginPath(); c.arc(g[0], g[1], 6, 0, 7); c.fillStyle = '#0f9d8a'; c.fill(); });
+}
+function drawZones(c, T) {
+  B.fx.forEach(function (f) {
+    var k = f.t / f.life;
+    if (f.k === 'zone') { c.beginPath(); c.arc(f.x, f.y, f.R, 0, 7); c.fillStyle = 'rgba(255,59,48,' + (0.12 + 0.25 * k) + ')'; c.fill(); c.lineWidth = 3; c.strokeStyle = 'rgba(255,59,48,.9)'; c.stroke(); c.beginPath(); c.arc(f.x, f.y, f.R * k, 0, 7); c.fillStyle = 'rgba(255,59,48,.25)'; c.fill(); }
+    else if (f.k === 'blinkp') { c.globalAlpha = 0.3 + 0.4 * k; c.beginPath(); c.arc(f.x, f.y, f.r * (1.6 - k * 0.6), 0, 7); c.lineWidth = 4; c.setLineDash([8, 6]); c.strokeStyle = '#ff5d73'; c.stroke(); c.setLineDash([]); c.globalAlpha = 1; }
+  });
+}
+function drawFxExtra(c, f, k) {
+  if (f.k === 'zboom') { c.beginPath(); c.arc(f.x, f.y, f.R * (0.7 + 0.3 * k), 0, 7); c.fillStyle = 'rgba(255,90,60,' + (0.6 * (1 - k)) + ')'; c.fill(); }
+}
+function drawGoldArrow(c, h) {   // 황금 동글이 화면 밖이면 노란 화살표
+  var g = B.gold; if (!g || g.dead) return; var bx = (g.x - h.x) * ZOOM, by = (g.y - h.y) * ZOOM; if (Math.abs(bx) < VW / 2 && Math.abs(by) < VH / 2) return;
+  var ang = Math.atan2(by, bx), r = Math.min(VW, VH) / 2 - 40; c.save(); c.translate(VW / 2 + Math.cos(ang) * r, VH / 2 + Math.sin(ang) * r); c.rotate(ang); c.beginPath(); c.moveTo(14, 0); c.lineTo(-9, -10); c.lineTo(-9, 10); c.closePath(); fillStroke(c, '#ffd166', 3); c.restore();
 }
 
 /* ===== 동글 특공대 · 화면 도구, 문제, 결과 ===== */
@@ -2442,6 +2827,8 @@ function renderRec() {
   var h = '<div class="card"><b>📊 차시별 정답률</b> <small>(전투·훈련·오답 풀기에서 푼 모든 문제)</small><table class="rec"><tr><th>차시</th><th>별</th><th>최고 점수</th><th>정답률</th></tr>';
   for (var n = 1; n <= 10; n++) { var L = S.les[n], a = S.ls['L' + n]; tot.st += L.stars.filter(Boolean).length; h += '<tr' + (n === CUR ? ' class="cur"' : '') + '><td>' + n + '. ' + LES[n].name + '</td><td class="lst">' + L.stars.map(function (s) { return s ? '★' : '☆'; }).join('') + '</td><td>' + (S.bs['L' + n] ? nf(S.bs['L' + n]) : '-') + '</td><td>' + (a ? '<span class="bar"><i style="width:' + Math.round(100 * a[0] / a[1]) + '%"></i></span>' + Math.round(100 * a[0] / a[1]) + '% <small>(' + a[0] + '/' + a[1] + ')</small>' : '-') + '</td></tr>'; }
   h += '</table><small>전체: 별 ' + tot.st + '/30 · 맞힌 문제 ' + S.ok + '/' + S.n + (S.n ? ' (' + Math.round(100 * S.ok / S.n) + '%)' : '') + ' · 출격 ' + S.runs + '번 · 훈련 ' + S.tr + '번</small></div>';
+  var bk = S.bk || {}, bl = BPOOL[1].concat(BPOOL[2]), got = bl.filter(function (k) { return bk[k]; }).length;
+  h += '<div class="card"><b>👑 보스 도감</b> <small>(' + got + '/' + bl.length + ' · 처음 물리치면 💎30)</small><div class="bdex">' + bl.map(function (k) { var e = EN[k]; return '<div class="bd' + (bk[k] ? ' got' : '') + '"><b>' + (bk[k] ? e.name : '❓ ???') + '</b><small>' + (EN[k].boss === 1 ? '2:30 중간 보스' : '4:30 최종 보스') + (bk[k] ? ' · ' + bk[k] + '번 격파' : '') + '</small>' + (bk[k] ? '<small class="bh">' + BD[k].hint + '</small>' : '') + '</div>'; }).join('') + '</div></div>';
   h += '<div class="card"><b>📒 오답 노트</b> <small>(최근 ' + S.wrong.length + '개 · 눌러서 해설 보기)</small>' + (S.wrong.length ? S.wrong.map(function (w) { return '<details class="wd"><summary><span class="tag">' + w.L + '차시</span> ' + w.q.replace(/<br>/g, ' ').replace(/<[^>]+>/g, '').slice(0, 46) + '…</summary>' + wrongCard(w) + '</details>'; }).join('') : '<p class="center good">아직 틀린 문제가 없어요!</p>') + '</div>';
   h += '<div class="card setb"><button class="btn" id="bWho">👤 다른 이름으로 하기</button><button class="btn r" id="bWipe">🗑️ 내 기록 지우기</button></div>';
   box.innerHTML = h;
