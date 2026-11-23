@@ -286,6 +286,8 @@ td.low, span.low { background: #ffdcdc; } td.mid, span.mid { background: #fff0c7
 .tagd { background: var(--ink); color: #ffd166; border-radius: 8px; padding: 1px 8px; font-size: 13px; }
 .istat .nx { color: #2f8f45; font-size: 14px; }
 
+#netNote.bad { color: #c73e3e; }
+
 </style>
 </head>
 <body>
@@ -418,9 +420,6 @@ td.low, span.low { background: #ffdcdc; } td.mid, span.mid { background: #fff0c7
   <div class="modal" id="mMsg"><div class="mcard card"><h2 id="msgTitle"></h2><div id="msgBody" class="mbody"></div><div id="msgBtns" class="mbtns"></div></div></div>
   <div class="toast" id="toast"></div>
 </div>
-<script src="lib/firebase-app-compat.js"></script>
-<script src="lib/firebase-database-compat.js"></script>
-<script>/* lib 폴더가 없으면 파이어베이스 공식 주소에서 불러와요 */ if (!window.firebase) document.write('<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"><\/script><script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-database-compat.js"><\/script>'); else if (!firebase.database) document.write('<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-database-compat.js"><\/script>');</script>
 <script src="firebase-config.js"></script>
 <script>
 /* ===== 5단원 원의 둘레와 넓이 · 1~10차시 문제 생성기 =====
@@ -1183,22 +1182,49 @@ var Net = (function () {
     };
   }
 
-  /* ---------- 깃허브 페이지판: 파이어베이스 ---------- */
-  var D = null, err = '';
+  /* ---------- 깃허브 페이지판: 파이어베이스 Realtime Database (REST 방식) ----------
+     파이어베이스 도구 파일(SDK) 없이 브라우저의 fetch로 데이터베이스 주소에 직접 읽고 써요.
+     그래서 lib 폴더나 다른 사이트(gstatic.com)에서 파일을 받을 필요가 없어요. */
+  var err = '', BASE = '';
   try {
     var cfg = window.FIREBASE_CONFIG || {};
-    if (!window.firebase || !firebase.database) throw new Error('파이어베이스 도구(lib/firebase-*.js)를 불러오지 못했어요.');
-    if (!cfg.databaseURL || /여기에|YOUR|프로젝트/.test(cfg.databaseURL) || !/^https:\/\//.test(cfg.databaseURL)) throw new Error('firebase-config.js에 새 파이어베이스 프로젝트 설정(특히 databaseURL)을 넣어 주세요.');
-    if (!cfg.apiKey || /여기에|YOUR/.test(cfg.apiKey)) throw new Error('firebase-config.js의 apiKey를 넣어 주세요.');
-    if (!firebase.apps.length) firebase.initializeApp(cfg);
-    D = firebase.database();
+    if (!cfg.databaseURL || /여기에|YOUR|프로젝트/.test(cfg.databaseURL) || !/^(https:\/\/[^\/]+|http:\/\/(127\.0\.0\.1|localhost)(:\d+)?)/.test(cfg.databaseURL)) throw new Error('firebase-config.js에 데이터베이스 주소(databaseURL)를 넣어 주세요. Realtime Database → 데이터 탭 맨 위의 https://… 주소예요.');
+    BASE = cfg.databaseURL.replace(/\/+$/, '');
   } catch (e) { err = e.message; }
-  var ROOT = String(window.DB_ROOT || 'dongle5').replace(/^\/+|\/+$/g, '');
-  function R(p) { if (!D) throw new Error(err); return D.ref(ROOT + '/' + p); }
-  var OFF = 0; try { if (D) D.ref('.info/serverTimeOffset').on('value', function (s) { OFF = +s.val() || 0; }); } catch (e) {}
+  var ROOT = String(window.DB_ROOT || 'dongle5').replace(/^\/+|\/+$/g, ''), POLL = +window.POLL_MS || 8000, SV = { '.sv': 'timestamp' };
+  function url(p) { return BASE + '/' + ROOT.split('/').map(encodeURIComponent).join('/') + '/' + String(p).split('/').map(encodeURIComponent).join('/') + '.json'; }
+  function why(status, body) {
+    var m = body && (body.error || body.message) || '';
+    if (status === 401 || /permission/i.test(m)) return '데이터베이스 규칙이 막고 있어요. 파이어베이스 콘솔 → Realtime Database → 규칙 탭에 database.rules.json 내용을 붙여 넣고 「게시」했는지 확인해 주세요.';
+    if (status === 404 || /URL of your Firebase Realtime Database/i.test(m)) return 'databaseURL 주소가 맞지 않아요. Realtime Database → 데이터 탭 맨 위의 주소와 똑같은지 확인해 주세요.';
+    if (status === 423) return '데이터베이스가 꺼져 있어요(파이어베이스 콘솔에서 확인).';
+    return '데이터베이스 오류 ' + status + (m ? ': ' + m : '');
+  }
+  function req(method, p, body) {
+    if (err) return Promise.reject(new Error(err));
+    var ctl = window.AbortController ? new AbortController() : null, tm = ctl ? setTimeout(function () { ctl.abort(); }, 15000) : 0;
+    return fetch(url(p), { method: method, body: body === undefined ? undefined : JSON.stringify(body), signal: ctl ? ctl.signal : undefined, cache: 'no-store' })
+      .then(function (r) { clearTimeout(tm); return r.text().then(function (t) { var j = null; try { j = t ? JSON.parse(t) : null; } catch (e) {} if (!r.ok) throw new Error(why(r.status, j)); return j; }); },
+        function (e) { clearTimeout(tm); throw new Error(e && e.name === 'AbortError' ? '데이터베이스가 응답하지 않아요(인터넷 연결 확인).' : '데이터베이스 주소에 연결하지 못했어요. databaseURL 주소와 인터넷 연결을 확인해 주세요.'); });
+  }
+  function Ref(p) { this.p = p; this.timer = 0; }
+  Ref.prototype.once = function () { return req('GET', this.p).then(function (v) { return { val: function () { return v; } }; }); };
+  Ref.prototype.set = function (v) { return req('PUT', this.p, v); };
+  Ref.prototype.update = function (v) { return req('PATCH', this.p, v); };
+  Ref.prototype.remove = function () { return req('DELETE', this.p); };
+  Ref.prototype.on = function (ev, cb, ecb) {   // 실시간 대신 몇 초마다 다시 읽어요(동시 접속 수를 아껴요)
+    var self = this, last = '__';
+    function tick() { req('GET', self.p).then(function (v) { var k = JSON.stringify(v); if (k !== last) { last = k; cb({ val: function () { return v; } }); } }, function () { if (last === '__') { last = 'null'; if (ecb) ecb(); } }); }
+    tick(); this.timer = setInterval(tick, POLL);
+  };
+  Ref.prototype.off = function () { clearInterval(this.timer); };
+  function R(p) { if (err) throw new Error(err); return new Ref(p); }
+  var OFF = 0;
   function now() { return Date.now() + OFF; }
+  // 처음 열 때 한 번: 주소·규칙이 맞는지 확인(문제가 있으면 첫 화면에 이유를 보여 줘요)
+  function check() { return req('GET', 'open/_all').then(function () { return ''; }, function (e) { return e.message; }); }
   return {
-    local: false, err: err, key: key, now: now, day: day, root: ROOT,
+    local: false, err: err, key: key, now: now, day: day, root: ROOT, check: check,
     gate: function (cls, cb) {
       var a = null, c = null, rs = [];
       function h(i) { return function (s) { if (i) c = (s && s.val()) || {}; else a = (s && s.val()) || {}; if (a && c) cb(a, c); }; }
@@ -1208,7 +1234,7 @@ var Net = (function () {
     load: function (cls, name) { return P(function () { return R('save/' + key(cls) + '/' + key(name)).once('value').then(function (s) { var v = s.val(); return v ? JSON.parse(v.j) : null; }); }); },
     save: function (cls, name, S, row) {
       return P(function () {
-        var t = firebase.database.ServerValue.TIMESTAMP, r = cleanRow(row); r.t = t;
+        var t = SV, r = cleanRow(row); r.t = t;
         return Promise.all([R('save/' + key(cls) + '/' + key(name)).set({ j: JSON.stringify(S), t: t }), R('rank/' + key(cls) + '/' + key(name)).set(r)]);
       });
     },
@@ -2051,7 +2077,7 @@ function tWatch() {   // 고른 반의 지금 차시를 보여 줘요
 function tMsg(t, ok) { var m = $('#tMsg'); m.textContent = (ok === false ? '⚠️ ' : ok ? '✅ ' : '') + t; m.className = 'tmsg' + (ok === false ? ' bad' : ''); }
 function tRun(what, arg) {
   var pin = TD.pin, cl = tCls(); if (!pin) { openTeacher(); return Promise.resolve(null); }
-  if (what === 'reset' && TD.armed < Date.now() || what === 'reset' && !TD.armed) { TD.armed = Date.now() + 6000; tMsg('정말 ' + (cl || '모든 반') + '의 동글 특공대 기록(장비·코인·정답 기록)을 지울까요? 6초 안에 한 번 더 누르면 지워요.'); return; }
+  if (what === 'reset' && TD.armed < Date.now() || what === 'reset' && !TD.armed) { TD.armed = Date.now() + 6000; tMsg('정말 ' + (cl || '모든 반') + '의 동글 특공대 기록(장비·코인·정답 기록)을 지울까요? 6초 안에 한 번 더 누르면 지워요.'); return Promise.resolve(null); }
   if (what === 'reset') TD.armed = 0;
   tMsg('처리 중…');
   return Net.teacher(pin, cl, what, arg).then(function (r) {
@@ -2415,7 +2441,8 @@ function renderName() {
   var nh = $('#nHero'); if (!nh.firstChild) { var cv = document.createElement('canvas'), d = Math.min(2, window.devicePixelRatio || 1); cv.width = 220 * d; cv.height = 120 * d; cv.style.width = '220px'; cv.style.height = '120px'; var c = cv.getContext('2d'); c.scale(d, d); drawHero(c, 110, 62, 32, { t: 0.3 }); [['tri', 30, 40], ['sq', 190, 34], ['pent', 186, 92], ['tri', 36, 96]].forEach(function (e) { var sp = SPR[e[0]] || makeSprite(e[0]); c.drawImage(sp.cv, e[1] - sp.s / 2, e[2] - sp.s / 2, sp.s, sp.s); }); nh.appendChild(cv); }
   var last = Store.get('last', null);
   if (last && typeof last === 'object') { $('#inName').value = last.name || ''; $('#inCls').value = last.cls || ''; }
-  $('#netNote').textContent = Net.local ? '이 파일판은 기록이 이 기기(브라우저)에만 저장돼요. 우리 반 순위도 이 기기에서 한 친구들만 보여요.' : (Net.err ? '⚠️ 온라인 준비가 덜 됐어요: ' + Net.err : '기록은 학교 서버(파이어베이스)에 저장돼서 다른 기기에서도 이어 할 수 있어요.');
+  $('#netNote').textContent = Net.local ? '이 파일판은 기록이 이 기기(브라우저)에만 저장돼요. 우리 반 순위도 이 기기에서 한 친구들만 보여요.' : (Net.err ? '⚠️ 온라인 준비가 덜 됐어요: ' + Net.err : '서버에 연결하는 중…');
+  if (!Net.local && !Net.err && Net.check) Net.check().then(function (m) { $('#netNote').textContent = m ? '⚠️ 온라인 연결 문제: ' + m : '✅ 서버에 연결됐어요. 기록이 저장돼서 다른 기기에서도 이어 할 수 있어요.'; $('#netNote').classList.toggle('bad', !!m); });
 }
 var GATE = { a: {}, c: {} }, GATEU = null, GATECLS = null;
 function gateWatch(cls) {
@@ -2468,6 +2495,15 @@ function boot() {
   bindBattleInput(); bindQuizTools(); bindTeacher();
   if (/^#teacher$/i.test(location.hash)) setTimeout(openTeacher, 50);   // 선생님은 주소 끝에 #teacher 를 붙여서 들어와요
   window.addEventListener('hashchange', function () { if (/^#teacher$/i.test(location.hash)) openTeacher(); });
+  // 숨은 문: 첫 화면 제목(동글 특공대)이나 로비 왼쪽 위 이름을 3초 안에 5번 누르면 선생님 메뉴가 열려요(비밀번호는 그대로 필요해요).
+  var tapN = 0, tapT = 0;
+  ['#scr-name .logo h1', '#tName'].forEach(function (q) {
+    var el = $(q); if (!el) return; el.style.userSelect = 'none'; el.style.webkitUserSelect = 'none';
+    el.addEventListener('pointerdown', function () {
+      var t = Date.now(); if (t - tapT > 3000) tapN = 0; if (!tapN) tapT = t; tapN++;
+      if (tapN >= 5) { tapN = 0; tapT = 0; openTeacher(); }
+    });
+  });
   $('#startBtn').onclick = enter; ['#inName', '#inCls'].forEach(function (q) { $(q).addEventListener('keydown', function (e) { if (e.key === 'Enter') enter(); }); });
   $$('#nav button').forEach(function (b) { b.onclick = function () { TAB = b.dataset.tab; beep('gem'); renderLobby(); $('#lmain').scrollTop = 0; }; });
   $('#bPause').onclick = function () { if (B && !B.modal && !B.over) pauseGame(); };
