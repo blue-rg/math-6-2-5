@@ -347,11 +347,20 @@ td.low, span.low { background: #ffdcdc; } td.mid, span.mid { background: #fff0c7
     <main class="tmain">
       <div class="card tgate" id="tGate">
         <h2 id="tGateTitle">🔒 선생님만 들어갈 수 있어요</h2>
+        <div id="tLoginBox">
         <label for="tPin">비밀번호</label><input id="tPin" type="password" autocomplete="off">
         <div id="tPin2Wrap" class="hide"><label for="tPin2">한 번 더</label><input id="tPin2" type="password" autocomplete="off"></div>
         <div id="tGateMsg" class="msg"></div>
         <button class="btn y big" id="tLogin">들어가기</button>
         <p class="note" id="tGateNote"></p>
+        </div>
+        <div id="tSetup" class="hide">
+          <p class="note">firebase-config.js에 아직 선생님 비밀번호가 없어요. 여기서 비밀번호를 정하면 파일에 넣을 한 줄을 만들어 드려요. 비밀번호는 암호화된 값으로만 들어가요.</p>
+          <label for="tSet1">새 비밀번호 (6자 이상)</label><input id="tSet1" type="password" autocomplete="new-password">
+          <label for="tSet2">한 번 더</label><input id="tSet2" type="password" autocomplete="new-password">
+          <button class="btn y big" id="tSetB" style="margin-top:10px">한 줄 만들기</button>
+          <div id="tSetMsg" class="note"></div>
+        </div>
       </div>
       <div id="tPanel" class="hide">
       <div class="card">
@@ -411,6 +420,7 @@ td.low, span.low { background: #ffdcdc; } td.mid, span.mid { background: #fff0c7
 </div>
 <script src="lib/firebase-app-compat.js"></script>
 <script src="lib/firebase-database-compat.js"></script>
+<script>/* lib 폴더가 없으면 파이어베이스 공식 주소에서 불러와요 */ if (!window.firebase) document.write('<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"><\/script><script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-database-compat.js"><\/script>'); else if (!firebase.database) document.write('<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-database-compat.js"><\/script>');</script>
 <script src="firebase-config.js"></script>
 <script>
 /* ===== 5단원 원의 둘레와 넓이 · 1~10차시 문제 생성기 =====
@@ -1093,7 +1103,7 @@ function sha256(str) {
 function pinHash(pin) { return sha256('dongle5:' + String(pin)); }
 
 /* ===== 저장소: 깃허브 페이지판은 파이어베이스, 한 파일판(아티팩트)은 이 기기 =====
-   파이어베이스: 4단원과 같은 firebase-config.js를 쓰고, 기록은 'snow/dongle5/' 아래에 둬요(다른 단원 기록은 건드리지 않아요).
+   파이어베이스: 이 게임 전용 프로젝트의 firebase-config.js를 쓰고, 기록은 'dongle5/' 아래에 둬요(DB_ROOT로 바꿀 수 있어요).
      open/_all · open/반   = { les 오늘의 차시, hours 게임 시간, until 잠깐 열기, shut 오늘 닫기, reset 초기화 시각 }
      save/반/이름          = 장비·코인 등 이어 하기용 기록
      rank/반/이름          = 랭킹과 선생님 현황판에 쓰는 요약(정답 수, 차시별·유형별 정답, 최고 점수) */
@@ -1178,15 +1188,17 @@ var Net = (function () {
   try {
     var cfg = window.FIREBASE_CONFIG || {};
     if (!window.firebase || !firebase.database) throw new Error('파이어베이스 도구(lib/firebase-*.js)를 불러오지 못했어요.');
-    if (!cfg.databaseURL || /여기에|YOUR/.test(cfg.databaseURL)) throw new Error('firebase-config.js에 파이어베이스 설정(databaseURL 등)을 넣어 주세요.');
+    if (!cfg.databaseURL || /여기에|YOUR|프로젝트/.test(cfg.databaseURL) || !/^https:\/\//.test(cfg.databaseURL)) throw new Error('firebase-config.js에 새 파이어베이스 프로젝트 설정(특히 databaseURL)을 넣어 주세요.');
+    if (!cfg.apiKey || /여기에|YOUR/.test(cfg.apiKey)) throw new Error('firebase-config.js의 apiKey를 넣어 주세요.');
     if (!firebase.apps.length) firebase.initializeApp(cfg);
     D = firebase.database();
   } catch (e) { err = e.message; }
-  function R(p) { if (!D) throw new Error(err); return D.ref('snow/dongle5/' + p); }
+  var ROOT = String(window.DB_ROOT || 'dongle5').replace(/^\/+|\/+$/g, '');
+  function R(p) { if (!D) throw new Error(err); return D.ref(ROOT + '/' + p); }
   var OFF = 0; try { if (D) D.ref('.info/serverTimeOffset').on('value', function (s) { OFF = +s.val() || 0; }); } catch (e) {}
   function now() { return Date.now() + OFF; }
   return {
-    local: false, err: err, key: key, now: now, day: day,
+    local: false, err: err, key: key, now: now, day: day, root: ROOT,
     gate: function (cls, cb) {
       var a = null, c = null, rs = [];
       function h(i) { return function (s) { if (i) c = (s && s.val()) || {}; else a = (s && s.val()) || {}; if (a && c) cb(a, c); }; }
@@ -2001,6 +2013,9 @@ var TD = { rows: [], sort: 'acc', asc: true, gateU: null, cur: 0, pin: null };
 // 선생님 메뉴는 비밀번호를 맞혀야 열려요. 나가거나 새로 고치면 다시 잠겨요.
 function openTeacher() {
   showScreen('teacher'); TD.pin = null; $('#tPanel').classList.add('hide'); $('#tGate').classList.remove('hide');
+  var noPin = !Net.local && !Net.hasPin();
+  $('#tSetup').classList.toggle('hide', !noPin); $('#tLoginBox').classList.toggle('hide', noPin);
+  if (noPin) { $('#tGateTitle').textContent = '🔑 선생님 비밀번호 만들기'; $('#tSetMsg').innerHTML = ''; return; }
   var first = Net.local && !Net.hasPin();
   $('#tGateTitle').textContent = first ? '🔑 이 기기에서 쓸 선생님 비밀번호 정하기' : '🔒 선생님만 들어갈 수 있어요';
   $('#tPin2Wrap').classList.toggle('hide', !first);
@@ -2109,7 +2124,14 @@ function tCsv() {
 }
 function bindTeacher() {
   $('#tBack').onclick = function () { if (TD.gateU) TD.gateU(); TD.gateU = null; TD.pin = null; TD.rows = []; $('#tDash').innerHTML = ''; if (location.hash) history.replaceState(null, '', location.pathname + location.search); showScreen(S ? 'lobby' : 'name'); if (S) renderLobby(); };
-  $('#tLogin').onclick = tLogin; ['#tPin', '#tPin2'].forEach(function (q) { $(q).addEventListener('keydown', function (e) { if (e.key === 'Enter') tLogin(); }); });
+  $('#tLogin').onclick = tLogin;
+  $('#tSetB').onclick = function () {   // firebase-config.js에 넣을 한 줄 만들기(비밀번호는 저장하지 않아요)
+    var a = $('#tSet1').value, b = $('#tSet2').value, M = $('#tSetMsg');
+    if (a.length < 6) { M.textContent = '6자 이상으로 정해 주세요(영문과 숫자를 섞으면 더 안전해요).'; return; }
+    if (a !== b) { M.textContent = '두 번 넣은 비밀번호가 달라요.'; return; }
+    M.innerHTML = '아래 한 줄을 복사해서 <b>firebase-config.js</b>의 <code>window.TEACHER_PIN_HASH = \'\';</code> 줄과 바꾸고 깃허브에 올려 주세요. 1~2분 뒤 이 화면을 새로 고치면 로그인 화면이 나와요.<code class="code">window.TEACHER_PIN_HASH = \'' + pinHash(a) + '\';</code>';
+    $('#tSet1').value = $('#tSet2').value = '';
+  }; ['#tPin', '#tPin2'].forEach(function (q) { $(q).addEventListener('keydown', function (e) { if (e.key === 'Enter') tLogin(); }); });
   $('#tPwB').onclick = function () {   // 비밀번호 바꾸기
     var a = $('#tPwNew').value, b = $('#tPwNew2').value, M = $('#tPwMsg');
     if (a.length < 4) { M.textContent = '4자 이상으로 정해 주세요(숫자와 영문을 섞어 8자 이상이면 더 안전해요).'; return; }
