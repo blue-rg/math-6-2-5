@@ -7,7 +7,7 @@
 window.FIREBASE_CONFIG = {
   apiKey: "AIzaSyDJzFvvyLS_hnPmbIvW2sWzWYcltC1V-_U",
   authDomain: "math-6-2-5.firebaseapp.com",
-  databaseURL: "https://math-6-2-5-default-rtdb.asia-southeast1.firebasedatabase.app",
+  databaseURL: "https://math-6-2-5-default-rtdb.firebaseio.com",
   projectId: "math-6-2-5",
   storageBucket: "math-6-2-5.firebasestorage.app",
   messagingSenderId: "903272072496",

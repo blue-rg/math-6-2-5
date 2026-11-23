@@ -1118,18 +1118,31 @@ var Net = (function () {
     return o;
   }
   // 비밀번호 확인: firebase-config.js의 TEACHER_PIN_HASH(암호화된 값)를 먼저 쓰고, 없으면 TEACHER_PIN
+  // 앞뒤 빈칸·따옴표는 지우고, 64자리 암호화 값이 아니면 그 글자를 비밀번호 자체로 봐요(비밀번호를 그대로 넣은 경우).
+  function clean(v) { return String(v == null ? '' : v).replace(/^[\s'"`]+|[\s'"`]+$/g, ''); }
+  function hashOk(h) { return /^[0-9a-f]{64}$/.test(h); }
   function pinOk(pin) {
-    var H = String(window.TEACHER_PIN_HASH || '').toLowerCase(), PIN = String(window.TEACHER_PIN || '');
-    if (H) return pinHash(pin) === H;
+    pin = clean(pin); if (!pin) return false;
+    var H = clean(window.TEACHER_PIN_HASH).toLowerCase(), H0 = clean(window.TEACHER_PIN_HASH), PIN = clean(window.TEACHER_PIN);
+    if (H && hashOk(H) && pinHash(pin) === H) return true;
+    if (H0 && !hashOk(H) && pin === H0) return true;
     return !!PIN && pin === PIN;
+  }
+  function pinWarn() {   // 선생님이 파일을 잘못 고친 것 같을 때 알려 줘요
+    var H = clean(window.TEACHER_PIN_HASH).toLowerCase();
+    if (H && !hashOk(H)) return '⚠️ firebase-config.js의 TEACHER_PIN_HASH가 암호화된 값(64자리)이 아니에요. 지금은 그 글자를 비밀번호로 써요. 들어간 뒤 「비밀번호 바꾸기」에서 만든 한 줄로 바꿔 주세요.';
+    return '';
   }
   function checkPin(pin) {
     if (!window.TEACHER_PIN_HASH && !window.TEACHER_PIN) return '선생님 비밀번호가 비어 있어서 선생님 메뉴가 꺼져 있어요.';
     return pinOk(pin) ? '' : '비밀번호가 틀렸어요.';
   }
   // 5번 틀리면 이 기기에서 10분 동안 잠가요
-  function lockLeft() { var f = Store.get('t_fail', { n: 0, until: 0 }); return f.until > Date.now() ? Math.ceil((f.until - Date.now()) / 60000) : 0; }
-  function failed(ok) { var f = Store.get('t_fail', { n: 0, until: 0 }); if (ok) f = { n: 0, until: 0 }; else { f.n++; if (f.n >= 5) { f.until = Date.now() + 600000; f.n = 0; } } Store.set('t_fail', f); return f; }
+  // 선생님이 firebase-config.js의 비밀번호 값을 고치면 이 잠금은 바로 풀려요.
+  function fp() { return String(window.TEACHER_PIN_HASH || '') + '|' + String(window.TEACHER_PIN || ''); }
+  function getF() { var f = Store.get('t_fail', { n: 0, until: 0 }); if (f.fp !== undefined && f.fp !== fp()) f = { n: 0, until: 0 }; return f; }
+  function lockLeft() { var f = getF(); return f.until > Date.now() ? Math.ceil((f.until - Date.now()) / 60000) : 0; }
+  function failed(ok) { var f = getF(); if (ok) f = { n: 0, until: 0 }; else { f.n++; if (f.n >= 5) { f.until = Date.now() + 600000; f.n = 0; } } f.fp = fp(); Store.set('t_fail', f); return f; }
   function verifyWith(test, pin) {
     var m = lockLeft(); if (m) return { ok: false, msg: '비밀번호를 여러 번 틀려서 ' + m + '분 동안 잠겼어요.' };
     var ok = test(pin), f = failed(ok);
@@ -1239,7 +1252,7 @@ var Net = (function () {
       });
     },
     rank: function (cls) { return P(function () { return R('rank/' + key(cls)).once('value').then(function (s) { var o = s.val() || {}; return Object.keys(o).map(function (k) { return o[k]; }); }); }); },
-    hasPin: function () { return !!(window.TEACHER_PIN_HASH || window.TEACHER_PIN); },
+    hasPin: function () { return !!(clean(window.TEACHER_PIN_HASH) || clean(window.TEACHER_PIN)); }, pinWarn: pinWarn,
     verify: function (pin) { var bad = (!window.TEACHER_PIN_HASH && !window.TEACHER_PIN) ? '선생님 비밀번호가 firebase-config.js에 없어서 선생님 메뉴가 꺼져 있어요.' : ''; if (bad) return Promise.resolve({ ok: false, msg: bad }); return Promise.resolve(verifyWith(pinOk, pin)); },
     teacher: function (pin, cls, what, arg) {
       var bad = checkPin(pin); if (bad) return Promise.resolve({ ok: false, msg: bad });
@@ -2045,13 +2058,15 @@ function openTeacher() {
   var first = Net.local && !Net.hasPin();
   $('#tGateTitle').textContent = first ? '🔑 이 기기에서 쓸 선생님 비밀번호 정하기' : '🔒 선생님만 들어갈 수 있어요';
   $('#tPin2Wrap').classList.toggle('hide', !first);
-  $('#tGateNote').textContent = first ? '이 파일판은 기록이 이 기기에만 있어요. 4자 이상으로 정하고, 학생에게 알려 주지 마세요.' : (Net.local ? '이 기기에서 정한 비밀번호를 넣어 주세요.' : 'firebase-config.js에 정해 둔 선생님 비밀번호를 넣어 주세요.');
+  $('#tGateNote').textContent = first ? '이 파일판은 기록이 이 기기에만 있어요. 4자 이상으로 정하고, 학생에게 알려 주지 마세요.' : (Net.local ? '이 기기에서 정한 비밀번호를 넣어 주세요.' : ((Net.pinWarn && Net.pinWarn()) || 'firebase-config.js에 정해 둔 선생님 비밀번호를 넣어 주세요.'));
   $('#tGateMsg').textContent = ''; $('#tPin').value = ''; $('#tPin2').value = ''; setTimeout(function () { $('#tPin').focus(); }, 50);
 }
 function tLogin() {
-  var pin = $('#tPin').value, M = $('#tGateMsg');
+  var pin = $('#tPin').value.trim(), M = $('#tGateMsg');
+  if (/[ㄱ-ㅎㅏ-ㅣ가-힣]/.test(pin)) { M.textContent = '⌨️ 한글로 입력되고 있어요. 한/영 키를 눌러 영문으로 바꾼 뒤 다시 넣어 주세요. (틀린 횟수에는 세지 않아요)'; $('#tPin').value = ''; return; }
+  if (!pin) { M.textContent = '비밀번호를 넣어 주세요.'; return; }
   if (Net.local && !Net.hasPin()) {
-    if (pin !== $('#tPin2').value) { M.textContent = '두 번 넣은 비밀번호가 달라요.'; return; }
+    if (pin !== $('#tPin2').value.trim()) { M.textContent = '두 번 넣은 비밀번호가 달라요.'; return; }
     var r0 = Net.setPin(pin); if (!r0.ok) { M.textContent = r0.msg; return; }
   }
   Net.verify(pin).then(function (r) {
@@ -2152,14 +2167,14 @@ function bindTeacher() {
   $('#tBack').onclick = function () { if (TD.gateU) TD.gateU(); TD.gateU = null; TD.pin = null; TD.rows = []; $('#tDash').innerHTML = ''; if (location.hash) history.replaceState(null, '', location.pathname + location.search); showScreen(S ? 'lobby' : 'name'); if (S) renderLobby(); };
   $('#tLogin').onclick = tLogin;
   $('#tSetB').onclick = function () {   // firebase-config.js에 넣을 한 줄 만들기(비밀번호는 저장하지 않아요)
-    var a = $('#tSet1').value, b = $('#tSet2').value, M = $('#tSetMsg');
+    var a = $('#tSet1').value.trim(), b = $('#tSet2').value.trim(), M = $('#tSetMsg');
     if (a.length < 6) { M.textContent = '6자 이상으로 정해 주세요(영문과 숫자를 섞으면 더 안전해요).'; return; }
     if (a !== b) { M.textContent = '두 번 넣은 비밀번호가 달라요.'; return; }
     M.innerHTML = '아래 한 줄을 복사해서 <b>firebase-config.js</b>의 <code>window.TEACHER_PIN_HASH = \'\';</code> 줄과 바꾸고 깃허브에 올려 주세요. 1~2분 뒤 이 화면을 새로 고치면 로그인 화면이 나와요.<code class="code">window.TEACHER_PIN_HASH = \'' + pinHash(a) + '\';</code>';
     $('#tSet1').value = $('#tSet2').value = '';
   }; ['#tPin', '#tPin2'].forEach(function (q) { $(q).addEventListener('keydown', function (e) { if (e.key === 'Enter') tLogin(); }); });
   $('#tPwB').onclick = function () {   // 비밀번호 바꾸기
-    var a = $('#tPwNew').value, b = $('#tPwNew2').value, M = $('#tPwMsg');
+    var a = $('#tPwNew').value.trim(), b = $('#tPwNew2').value.trim(), M = $('#tPwMsg');
     if (a.length < 4) { M.textContent = '4자 이상으로 정해 주세요(숫자와 영문을 섞어 8자 이상이면 더 안전해요).'; return; }
     if (a !== b) { M.textContent = '두 번 넣은 비밀번호가 달라요.'; return; }
     if (Net.local) { var r = Net.setPin(a, TD.pin); M.textContent = r.ok ? '✅ 바꿨어요. 다음부터 새 비밀번호로 들어와요.' : '⚠️ ' + r.msg; if (r.ok) TD.pin = a; }
