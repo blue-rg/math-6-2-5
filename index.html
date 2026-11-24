@@ -293,6 +293,8 @@ td.low, span.low { background: #ffdcdc; } td.mid, span.mid { background: #fff0c7
 .bd.got { border:2px solid #2b2d42; background:#fff8e1; color:#2b2d42; }
 .bd small { font-size:12px; } .bd .bh { color:#6b6f86; }
 
+.gfit { color:#6b6f86; font-size:12px; }
+
 </style>
 </head>
 <body>
@@ -1123,6 +1125,14 @@ var PITY = { r: 10, h: 30, l: 90 };
 function diffHp(L) { return 1 + 0.3 * (L - 1); }
 function diffDmg(L) { return 1 + 0.15 * (L - 1); }
 function rewMul(L) { return 1 + 0.25 * (L - 1); }
+// 장비 능력치에 맞춘 몬스터: r = (내 전투력)÷(그 차시 권장 전투력)
+//  체력  r<1 이면 r^0.7배(최소 0.4), r≥1 이면 r^0.6배(최대 1.5)
+//        지수가 1보다 작아서 강화하면 공격력이 몬스터 체력보다 더 빨리 늘어요 → 강화할수록 확실히 빨리 잡아요
+//  공격  r^0.4배(0.65~1.3) → 체력이 낮은 학생은 덜 아프게, 체력이 높은 학생은 더 아프게
+function gearFit(pow, L) {
+  var r = pow / (REC[L] || REC[REC.length - 1]);
+  return { r: r, h: r < 1 ? Math.max(0.4, Math.pow(r, 0.7)) : Math.min(1.5, Math.pow(r, 0.6)), d: Math.max(0.65, Math.min(1.3, Math.pow(r, 0.4))) };
+}
 // 전투력 = 공격력×5 + 체력. 차시별 권장 전투력은 10차시 성장 모의실험의 중앙값이에요
 var REC = [0, 500, 700, 830, 950, 1070, 1200, 1340, 1450, 1590, 1700];
 function power(st) { return Math.round(st.atk * 5 + st.hp); }
@@ -1491,8 +1501,8 @@ var MAXA = 4, MAXP = 4, RUN_T = 300, BOSS1_T = 150, BOSS2_T = 270;
 var EN = {
   tri: { n: 3, r: 11, hp: 8, spd: 72, dmg: 6, xp: 1, c: '#ff6b6b', rot: -Math.PI / 2 },
   sq: { n: 4, r: 13, hp: 20, spd: 54, dmg: 8, xp: 2, c: '#5c7cfa', rot: Math.PI / 4 },
-  pent: { n: 5, r: 16, hp: 46, spd: 46, dmg: 11, xp: 4, c: '#b46ee8', rot: -Math.PI / 2 },
-  hex: { n: 6, r: 19, hp: 95, spd: 40, dmg: 14, xp: 7, c: '#2fb380', rot: 0 },
+  pent: { n: 5, r: 16, hp: 36, spd: 46, dmg: 11, xp: 4, c: '#b46ee8', rot: -Math.PI / 2 },
+  hex: { n: 6, r: 19, hp: 70, spd: 40, dmg: 14, xp: 7, c: '#2fb380', rot: 0 },
   star: { n: 10, r: 24, hp: 520, spd: 66, dmg: 18, xp: 25, c: '#ffbe0b', rot: -Math.PI / 2, star: 1 },
   boss1: { n: 8, r: 48, hp: 2400, spd: 48, dmg: 22, xp: 60, c: '#ff8c42', rot: Math.PI / 8, boss: 1, name: '정팔각형 대장' },
   boss2: { n: 12, r: 60, hp: 5500, spd: 44, dmg: 28, xp: 120, c: '#7b2cbf', rot: 0, boss: 2, name: '정십이각형 대왕' }
@@ -1519,7 +1529,7 @@ function sprites() { Object.keys(EN).forEach(function (k) { if (!EN[k].boss) { S
 function startRun() {
   var L = CUR, st = heroStats();
   B = {
-    L: L, t: 0, st: st, paused: false, over: false, modal: null,
+    L: L, fit: gearFit(power(st), L).h, dfit: gearFit(power(st), L).d, t: 0, st: st, paused: false, over: false, modal: null,
     h: { x: 0, y: 0, r: 15, hp: st.hp, max: st.hp, face: 1, inv: 0, moving: false, ax: 1, ay: 0 },
     lv: 1, xp: 0, pend: 0, sk: {}, cd: {}, en: [], pr: [], gems: [], fx: [], nums: [], kills: 0, coin: 0, gem: 0,
     spawnAcc: 0, events: {}, boss: null, bossOk: 0, bossN: 0, revived: false, cleared: false, endT: 0,
@@ -1585,8 +1595,8 @@ function update(dt) {
 
 /* ---------- 적 등장 ---------- */
 function spawnAt(type, x, y, mulHp) {
-  var e = EN[type], m = (mulHp || 1) * (e.boss ? 1 + B.t / 300 : 1 + B.t / 85) * diffHp(B.L);
-  var o = { id: (B.eid = (B.eid || 0) + 1), type: type, x: x, y: y, r: e.r, hp: e.hp * m, max: e.hp * m, spd: e.spd * (0.9 + Math.random() * 0.2), dmg: e.dmg * diffDmg(B.L), xp: e.xp, kx: 0, ky: 0, fl: 0, hitT: {}, boss: e.boss || 0 };
+  var e = EN[type], m = (mulHp || 1) * (e.boss ? 1 + B.t / 300 : 1 + B.t / 130) * diffHp(B.L) * (B.fit || 1);
+  var o = { id: (B.eid = (B.eid || 0) + 1), type: type, x: x, y: y, r: e.r, hp: e.hp * m, max: e.hp * m, spd: e.spd * (0.9 + Math.random() * 0.2), dmg: e.dmg * diffDmg(B.L) * (B.dfit || 1), xp: e.xp, kx: 0, ky: 0, fl: 0, hitT: {}, boss: e.boss || 0 };
   B.en.push(o); return o;
 }
 function ringPos(extra) { var a = Math.random() * Math.PI * 2, R = Math.hypot(VW, VH) / 2 / ZOOM + (extra || 40); return [B.h.x + Math.cos(a) * R, B.h.y + Math.sin(a) * R]; }
@@ -1820,7 +1830,7 @@ function pickups(dt) {
   }
   if (B.gems.length > 500) B.gems.splice(0, B.gems.length - 500);
   // 적의 탄
-  for (i = B.fx.length - 1; i >= 0; i--) { var f = B.fx[i]; if (f.k !== 'ebul') continue; f.x += f.vx * dt; f.y += f.vy * dt; if (Math.hypot(f.x - h.x, f.y - h.y) < h.r + 6 && h.inv <= 0) { h.hp -= (f.dmg || 14) * diffDmg(B.L) * (1 - B.st.dr); h.inv = 0.45; beep('hurt'); f.t = f.life; if (h.hp <= 0) { h.hp = 0; dead(); return; } } }
+  for (i = B.fx.length - 1; i >= 0; i--) { var f = B.fx[i]; if (f.k !== 'ebul') continue; f.x += f.vx * dt; f.y += f.vy * dt; if (Math.hypot(f.x - h.x, f.y - h.y) < h.r + 6 && h.inv <= 0) { h.hp -= (f.dmg || 14) * diffDmg(B.L) * (B.dfit || 1) * (1 - B.st.dr); h.inv = 0.45; beep('hurt'); f.t = f.life; if (h.hp <= 0) { h.hp = 0; dead(); return; } } }
   // 문제 상자 줍기
   for (i = B.boxes.length - 1; i >= 0; i--) { var bx = B.boxes[i]; bx.t += dt; if (bx.t > 30) { B.boxes.splice(i, 1); continue; } var bdd = Math.hypot(h.x - bx.x, h.y - bx.y); if (bdd < 90) { bx.x += (h.x - bx.x) / bdd * 160 * dt; bx.y += (h.y - bx.y) / bdd * 160 * dt; }   // 가까이 가면 끌려와요
  if (Math.hypot(bx.x - h.x, bx.y - h.y) < h.r + 16) { B.boxes.splice(i, 1); beep('open'); openBox(); return; } }
@@ -2071,7 +2081,7 @@ function bossIn(tier) {
 // 주인공이 맞을 때(보스 기술·방패)
 function heroHit(amt) {
   var h = B.h; if (B.cleared || h.inv > 0 || B.over) return;
-  h.hp -= amt * diffDmg(B.L) * (1 - B.st.dr); h.inv = 0.45; beep('hurt'); B.fx.push({ k: 'hurt', t: 0, life: 0.25 });
+  h.hp -= amt * diffDmg(B.L) * (B.dfit || 1) * (1 - B.st.dr); h.inv = 0.45; beep('hurt'); B.fx.push({ k: 'hurt', t: 0, life: 0.25 });
   if (h.hp <= 0) { h.hp = 0; dead(); }
 }
 function ebul(x, y, a, sp, dmg) { B.fx.push({ k: 'ebul', x: x, y: y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, t: 0, life: 3.5, dmg: dmg || 14 }); }
@@ -2592,13 +2602,13 @@ function renderPlay() {
   var st = heroStats(), box = $('#tab-play'), L = S.les[CUR], I = LES[CUR]; box.innerHTML = '';
   var me = document.createElement('div'); me.className = 'me card';
   me.appendChild(heroCanvas(86));
-  var pw = power(st), rec = REC[CUR], pk = Math.min(1, pw / rec);
+  var pw = power(st), rec = REC[CUR], pk = Math.min(1, pw / rec); var GF = gearFit(pw, CUR);
   me.insertAdjacentHTML('beforeend', '<div class="mest"><b>' + esc(S.name) + ' 특공대원</b> <small>' + esc(ME.cls) + '</small><div class="pills"><span class="pill atk">⚔️ ' + nf(st.atk) + '</span><span class="pill hp">❤️ ' + nf(st.hp) + '</span></div>' +
     '<div class="powrow"><b>💪 전투력 ' + nf(pw) + '</b> <small>/ ' + CUR + '차시 권장 ' + nf(rec) + '</small><span class="pbar big"><i class="' + (pw >= rec ? 'ok' : pw >= rec * 0.75 ? 'mid' : 'low') + '" style="width:' + Math.round(pk * 100) + '%"></i></span><small>' + (pw >= rec ? '충분해요! 보스까지 도전!' : '장비를 뽑고 강화하면 더 오래 버텨요') + '</small></div></div>');
   box.appendChild(me);
   var best = S.bs['L' + CUR] || 0, acc = S.ls['L' + CUR];
   box.insertAdjacentHTML('beforeend', '<div class="mission card"><div class="mtag">🎯 오늘의 작전 <small>선생님이 정해요</small></div><div class="mrow"><div class="lno big">' + CUR + '</div><div><b class="mname">' + CUR + '차시 · ' + I.name + '</b><small>' + I.topic + ' · ' + I.pg + '</small><small class="cum">📚 ' + (CUR > 1 ? '1~' + CUR + '차시 문제가 섞여 나와요 (오늘 차시가 절반 넘게)' : '1차시 문제가 나와요') + '</small></div></div>' +
-    '<div class="mstat"><span class="tagd">👾 적 체력 ×' + diffHp(CUR).toFixed(1) + ' · 공격 ×' + diffDmg(CUR).toFixed(2) + ' · 💰 보상 ×' + rewMul(CUR).toFixed(2) + '</span></div><div class="mstat"><span class="lst">' + L.stars.map(function (x) { return x ? '★' : '☆'; }).join('') + '</span><span>🏅 최고 ' + nf(best) + '점</span><span>✅ ' + (acc ? Math.round(100 * acc[0] / acc[1]) + '%' : '-') + '</span></div>' +
+    '<div class="mstat"><span class="tagd">👾 적 체력 ×' + (diffHp(CUR) * GF.h).toFixed(1) + ' · 공격 ×' + (diffDmg(CUR) * GF.d).toFixed(2) + ' · 💰 보상 ×' + rewMul(CUR).toFixed(2) + '</span></div><div class="mstat"><small class="gfit">🎯 내 장비에 맞춘 몬스터: 체력 ' + Math.round(GF.h * 100) + '% · 공격 ' + Math.round(GF.d * 100) + '%' + (GF.r < 1 ? ' · 장비가 약한 만큼 몬스터도 약해요. 강화하면 더 빨리 잡아요' : ' · 장비가 좋아서 몬스터도 세졌어요') + '</small></div><div class="mstat"><span class="lst">' + L.stars.map(function (x) { return x ? '★' : '☆'; }).join('') + '</span><span>🏅 최고 ' + nf(best) + '점</span><span>✅ ' + (acc ? Math.round(100 * acc[0] / acc[1]) + '%' : '-') + '</span></div>' +
     '<button class="btn g big" id="bGo">⚔️ 출격하기' + (qcfg().energy ? ' <small>⚡' + qcfg().energy + ' 필요 (지금 ⚡' + S.en + ')</small>' : '') + '</button></div>');
   box.insertAdjacentHTML('beforeend', '<button class="card rushc" id="bRush"><b>🏃 60초 문제 러시</b><small>60초 동안 최대한 많이! 정답마다 ⚡1 💰5 · 3개마다 💎1 · 내 최고 ' + (S.rush || 0) + '개 · 순위에 올라가요</small></button>');
   var wn = S.wrong.length;
