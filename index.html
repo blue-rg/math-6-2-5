@@ -1577,6 +1577,7 @@ function update(dt) {
   if (B.rage > 0) B.rage -= dt;
   if (B.st.regen || B.D.regen) { h.hp = Math.min(h.max, h.hp + (B.st.regen + B.D.regen * h.max) * dt); }
   spawn(dt);
+  arenaTick(dt);   // 보스전: 원형 결투장이 점점 작아져요
   grid();
   skills(dt);
   enemies(dt);
@@ -1584,9 +1585,10 @@ function update(dt) {
   // 효과
   for (var i = B.fx.length - 1; i >= 0; i--) { var f = B.fx[i]; f.t += dt; if (f.t >= f.life) { if (f.onEnd) f.onEnd(f); B.fx.splice(i, 1); } }
   for (i = B.nums.length - 1; i >= 0; i--) { var n = B.nums[i]; n.t += dt; n.y -= 30 * dt; if (n.t > 0.7) B.nums.splice(i, 1); }
-  // 클리어: 5분 생존 + 최종 보스(4:30 등장)를 물리치면. 6:30이 지나면 보스가 도망가요.
+  // 클리어: 5분 생존 + 최종 보스(4:30 등장)를 물리쳐야 해요. 보스는 도망가지 않아요.
   if (!B.cleared && B.t >= RUN_T && !(B.boss && B.boss.hp > 0)) { B.cleared = true; B.endT = B.t + 1.2; banner('🏁 5분 생존 성공!'); }
-  if (!B.cleared && B.t >= RUN_T + 90 && B.boss && B.boss.hp > 0) { B.boss.dead = true; B.boss = null; B.cleared = true; B.endT = B.t + 1.5; banner('💨 보스가 도망갔어요! 생존 성공'); }
+  // 안전장치: 9:00까지 보스를 못 잡으면 작전 종료(성공 아님)
+  if (!B.cleared && B.t >= RUN_T + 240 && !B.modal) { banner('⏰ 작전 시간이 끝났어요'); finishRun(false); return; }
   if (B.cleared && B.endT && B.t >= B.endT && !B.chest && !B.modal) { B.endT = 0; finishRun(true); return; }
   if (B.shieldQ && !B.modal && !B.over) { var se = B.shieldQ; B.shieldQ = null; shieldFlow(se); }
   else if (B.pend > 0 && !B.modal && !B.over) levelUpFlow();
@@ -1651,7 +1653,7 @@ function kill(e) {
   var big = e.boss || EN[e.type].star;
   if (big) {
     var cnt = e.boss ? 14 : 6; for (var i = 0; i < cnt; i++) B.gems.push({ x: e.x + (Math.random() - 0.5) * 60, y: e.y + (Math.random() - 0.5) * 60, v: Math.ceil(e.xp / cnt), k: 'gem', c: 2 });
-    if (e.boss) { bossDex(e); B.bossKills++; B.chest = { x: e.x, y: e.y, boss: e.boss, t: 0 }; if (B.boss === e) { B.boss = null; $('#bossBar').classList.add('hide'); } banner('👑 ' + e.name + ' 격파! 보물 상자를 주워요'); if (e.boss === 2) { B.cleared = true; B.endT = B.t + 0.5; } }
+    if (e.boss) { bossDex(e); B.bossKills++; B.chest = { x: e.x, y: e.y, boss: e.boss, t: 0 }; if (B.boss === e) { B.boss = null; $('#bossBar').classList.add('hide'); arenaEnd(); } banner('👑 ' + e.name + ' 격파! 보물 상자를 주워요'); if (e.boss === 2) { B.cleared = true; B.endT = B.t + 0.5; } }
     else { B.gems.push({ x: e.x, y: e.y, v: 40, k: 'coin' }); B.gems.push({ x: e.x + 14, y: e.y, k: 'mag' }); }
   } else if (e.type === 'gold') {   // 황금 동글: 코인·보석 듬뿍
     for (var gi = 0; gi < 8; gi++) B.gems.push({ x: e.x + (Math.random() - 0.5) * 50, y: e.y + (Math.random() - 0.5) * 50, v: Math.ceil(e.xp / 4), k: gi < 4 ? 'gem' : 'coin', c: 2 });
@@ -1854,6 +1856,7 @@ function render(T) {
   for (gx = Math.floor(x0 / 160) * 160; gx < x1; gx += 160) { c.moveTo(gx, y0); c.lineTo(gx, y1); }
   for (gy = Math.floor(y0 / 160) * 160; gy < y1; gy += 160) { c.moveTo(x0, gy); c.lineTo(x1, gy); }
   c.stroke();
+  drawArena(c, x0, y0, x1, y1);
   var vis = function (x, y, m) { return x > x0 - m && x < x1 + m && y > y0 - m && y < y1 + m; };
   // 방어막
   if (B.auraR) { c.beginPath(); c.arc(h.x, h.y, B.auraR, 0, 7); c.fillStyle = 'rgba(80,170,255,.13)'; c.fill(); c.lineWidth = 3; c.setLineDash([10, 8]); c.lineDashOffset = -T * 30; c.strokeStyle = 'rgba(60,140,255,.6)'; c.stroke(); c.setLineDash([]); }
@@ -2075,7 +2078,7 @@ function pickBoss(tier) {   // 바로 전 판과 다른 보스
 function bossIn(tier) {
   var type = pickBoss(tier), p = ringPos(-60), o = spawnAt(type, p[0], p[1], 1);
   o.atkT = 2.5; o.name = EN[type].name; o.thr = tier === 1 ? [0.5] : [0.66, 0.33]; o.pi = Math.floor(Math.random() * BD[type].pats.length); o.sd = Math.random() < 0.5 ? 1 : -1; o.ga = 0;
-  B.boss = o; beep('boss'); banner('👑 ' + o.name + ' 등장!'); toast('💡 ' + BD[type].hint, 4.5);
+  B.boss = o; beep('boss'); banner('👑 ' + o.name + ' 등장!'); toast('💡 ' + BD[type].hint, 4.5); arenaStart(tier);
   $('#bossBar').classList.remove('hide'); $('#bossName').textContent = o.name + (S.bk && S.bk[type] ? '' : ' 🆕');
 }
 // 주인공이 맞을 때(보스 기술·방패)
@@ -2244,6 +2247,36 @@ function drawFxExtra(c, f, k) {
 function drawGoldArrow(c, h) {   // 황금 동글이 화면 밖이면 노란 화살표
   var g = B.gold; if (!g || g.dead) return; var bx = (g.x - h.x) * ZOOM, by = (g.y - h.y) * ZOOM; if (Math.abs(bx) < VW / 2 && Math.abs(by) < VH / 2) return;
   var ang = Math.atan2(by, bx), r = Math.min(VW, VH) / 2 - 40; c.save(); c.translate(VW / 2 + Math.cos(ang) * r, VH / 2 + Math.sin(ang) * r); c.rotate(ang); c.beginPath(); c.moveTo(14, 0); c.lineTo(-9, -10); c.lineTo(-9, 10); c.closePath(); fillStroke(c, '#ffd166', 3); c.restore();
+}
+
+/* ===== 원형 결투장: 보스가 나오면 내 자리를 중심으로 원이 생기고 점점 작아져요. 원 밖으로는 나갈 수 없어요 ===== */
+var CELL = 32;   // 바닥 모눈 한 칸
+function arenaStart(tier) {
+  var R0 = 560, min = tier === 2 ? 190 : 240;
+  B.arena = { x: B.h.x, y: B.h.y, R: R0, min: min, sp: (R0 - min) / 35, gone: 0 };
+  setTimeout(function () { if (B && B.arena) toast('⭕ 원형 결투장! 원이 점점 작아져서 도망칠 수 없어요. 보스와 맞서요!', 3.5); }, 1600);
+}
+function arenaEnd() { if (B.arena) { B.arena.gone = 1; } }
+function arenaTick(dt) {
+  var A = B.arena; if (!A) return;
+  if (A.gone) { A.R += 600 * dt; if (A.R > 1400) B.arena = null; return; }   // 보스를 잡으면 원이 빠르게 넓어지며 사라져요
+  A.R = Math.max(A.min, A.R - A.sp * dt);
+  var h = B.h, dx = h.x - A.x, dy = h.y - A.y, d = Math.hypot(dx, dy) || 1, lim = A.R - h.r;
+  if (d > lim) { h.x = A.x + dx / d * lim; h.y = A.y + dy / d * lim; }   // 원 밖으로 못 나가요
+  var e = B.boss;
+  if (e && !e.dead) { dx = e.x - A.x; dy = e.y - A.y; d = Math.hypot(dx, dy) || 1; lim = Math.max(20, A.R - e.r * 0.6); if (d > lim) { e.x = A.x + dx / d * lim; e.y = A.y + dy / d * lim; if (e.dashing) e.dashing = 0; } }
+}
+function drawArena(c, x0, y0, x1, y1) {
+  var A = B.arena; if (!A) return;
+  c.save(); c.beginPath(); c.rect(x0 - 50, y0 - 50, x1 - x0 + 100, y1 - y0 + 100); c.arc(A.x, A.y, A.R, 0, PI2, true);
+  c.fillStyle = A.gone ? 'rgba(40,20,70,.15)' : 'rgba(40,20,70,.38)'; c.fill('evenodd');
+  c.beginPath(); c.arc(A.x, A.y, A.R, 0, PI2); c.lineWidth = 5; c.setLineDash([16, 10]); c.lineDashOffset = -B.t * 30; c.strokeStyle = A.R <= A.min + 1 ? '#ff3b30' : '#ff7a59'; c.stroke(); c.setLineDash([]);
+  if (!A.gone) {   // 반지름 표시(모눈 칸 수)
+    var lx = Math.max(x0 + 90, Math.min(x1 - 90, A.x)), ly = Math.min(A.y + A.R - 12, y1 - 24);   // 원 아래쪽(화면 밖이면 화면 아래)
+    c.font = 'bold 14px Jua, sans-serif'; c.textAlign = 'center'; c.lineWidth = 4; c.strokeStyle = '#fff'; var tx = '⭕ 결투장 반지름 ' + Math.round(A.R / CELL) + '칸';
+    c.strokeText(tx, lx, ly); c.fillStyle = '#c0392b'; c.fillText(tx, lx, ly);
+  }
+  c.restore();
 }
 
 /* ===== 동글 특공대 · 화면 도구, 문제, 결과 ===== */
