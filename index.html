@@ -295,6 +295,15 @@ td.low, span.low { background: #ffdcdc; } td.mid, span.mid { background: #fff0c7
 
 .gfit { color:#6b6f86; font-size:12px; }
 
+/* 📖 문제 읽는 시간 */
+.qans.locked .opt, .qans.locked .key, .qans.locked #qOk { opacity:.45; pointer-events:none; }
+.rlock { grid-column:1/-1; position:relative; height:30px; border-radius:10px; background:#eef0f7; overflow:hidden; margin-bottom:6px; display:flex; align-items:center; justify-content:center; font-size:14px; color:#4a4f6a; }
+.rlock i { position:absolute; left:0; top:0; bottom:0; width:100%; background:#ffd166; transform-origin:left; animation:rlk linear forwards; }
+.rlock span { position:relative; }
+@keyframes rlk { from { transform:scaleX(0); } to { transform:scaleX(1); } }
+@media (prefers-reduced-motion: reduce) { .rlock i { animation:none; transform:scaleX(1); opacity:.5; } }
+.accm { display:block; margin-top:2px; font-weight:bold; } .accm.up { color:#2b8a3e; } .accm.down { color:#c73e3e; }
+
 </style>
 </head>
 <body>
@@ -387,6 +396,12 @@ td.low, span.low { background: #ffdcdc; } td.mid, span.mid { background: #fff0c7
           <button class="lesb" data-q="2"><b>많이</b><small>❓상자 12초마다 · 출격 전 ⚡5 · 방패 2개 · 레벨 업 더 자주</small></button>
           <button class="lesb" data-q="3"><b>아주 많이</b><small>❓상자 8초마다 · 출격 전 ⚡8 · 방패 3개 · 레벨 업 아주 자주</small></button>
         </div><p class="note">⚡ 출격 에너지는 문제 러시·훈련소·오답 풀기에서 문제를 맞혀야 모여요. 기본은 「많이」예요.</p></div>
+      <div class="card"><b>📏 오답 규칙</b> <small>(반 코드를 비우면 모든 반)</small>
+        <div class="qlvgrid" id="tPen">
+          <button class="lesb" data-p="1"><b>끔</b><small>읽기 시간·벌칙 없음 (연속 정답 보너스만)</small></button>
+          <button class="lesb" data-p="2"><b>보통</b><small>읽기 1.5~4초 · 틀리면 ❤️-10% · 2연속 오답 5초 느려짐 · 정답률 코인 ×0.7~1.3</small></button>
+          <button class="lesb" data-p="3"><b>강하게</b><small>읽기 2~6초 · 틀리면 ❤️-20%·💰-5 · 2연속 오답 많이 느려짐 · 정답률 코인 ×0.5~1.3</small></button>
+        </div><p class="note">해설을 읽고 다시 푸는 비슷한 문제와 부활 문제에는 벌칙이 없어요. 체력은 벌칙으로 0이 되지 않아요. 기본은 「보통」이에요.</p></div>
       <div class="card" id="tHours"><b>⏰ 게임 시간</b> <small>(4단원과 같아요 · 반 코드를 비우면 모든 반)</small>
         <div class="trow"><input id="tHrs" maxlength="11" placeholder="08:30-15:00"><button class="btn sm" id="tHrsB">평일 게임 시간 정하기</button></div>
         <div class="trow"><input id="tMin" type="number" min="1" max="600" value="40"><button class="btn sm g" id="tOpen">지금부터 N분 열기</button><button class="btn sm r" id="tClose">오늘은 닫기</button></div></div>
@@ -1164,11 +1179,12 @@ function save(now) {
   if (Net && ME.cls) { clearTimeout(saveT); var f = function () { Net.save(ME.cls, ME.name, S, rowOf()).catch(function () { toast('⚠️ 온라인 저장이 잠깐 안 됐어요. 다음에 다시 저장해요.', 3); }); }; if (now) f(); else saveT = setTimeout(f, 1500); }
 }
 function totalStars() { var t = 0; for (var n = 1; n <= 10; n++) t += S.les[n].stars.filter(Boolean).length; return t; }
-function rowOf() { var st = heroStats(); return { name: ME.name, cls: ME.cls, ok: S.ok, n: S.n, star: totalStars(), pow: st.atk + st.hp, runs: S.runs, tr: S.tr, cur: CUR, bs: S.bs, ls: S.ls, ty: S.ty, rush: S.rush }; }
+function rowOf() { var st = heroStats(); return { name: ME.name, cls: ME.cls, ok: S.ok, n: S.n, star: totalStars(), pow: st.atk + st.hp, runs: S.runs, tr: S.tr, cur: CUR, bs: S.bs, ls: S.ls, ty: S.ty, rush: S.rush, fw: S.fw | 0, tq: S.tq || [0, 0] }; }
 // 문제를 풀 때마다 기록: 전체·차시별·유형별 정답, 틀리면 오답 노트
-function logAns(p, ok, my) {
+function logAns(p, ok, my, sec) {
   var L = p.from || p.L, kL = 'L' + L, t = p.type;
   S.n++; if (ok) S.ok++;
+  if (sec != null) { S.tq = S.tq || [0, 0]; S.tq[0]++; S.tq[1] += Math.min(120, sec); if (!ok && sec < 3) S.fw = (S.fw | 0) + 1; }   // 풀이 시간 · 3초 안에 틀린 '빠른 오답'
   var a = S.ls[kL] || [0, 0]; a[1]++; if (ok) a[0]++; S.ls[kL] = a;
   var b = S.ty[t] || [0, 0]; b[1]++; if (ok) b[0]++; S.ty[t] = b;
   if (!ok) { S.wrong.unshift({ L: L, type: t, star: p.star, q: p.q, fig: p.fig || '', a: Q5.ansText(p), my: my, e: p.e, d: today() }); if (S.wrong.length > 40) S.wrong.length = 40; }
@@ -1182,6 +1198,26 @@ var QCFG = {
   3: { n: '아주 많이', box: 8, boxMax: 4, xp: 0.65, shield: 3, energy: 8 }
 };
 function qcfg() { return QCFG[QLV] || QCFG[2]; }
+// 오답 규칙(선생님이 정해요): 1 끔 · 2 보통(기본) · 3 강하게
+var PEN = 2;
+var PCFG = {
+  1: { n: '끔', read: 0, hp: 0, slow: 0, coin: 0, acc: 0, d: '읽기 시간·오답 벌칙 없음(정답 연속 보너스만)' },
+  2: { n: '보통', read: 1, hp: 0.1, slow: 0.3, coin: 0, acc: 1, d: '문제 읽는 시간 1.5~4초 · 틀리면 ❤️-10% · 2번 연속 틀리면 5초 느려짐 · 정답률에 따라 코인 ×0.7~1.3' },
+  3: { n: '강하게', read: 1.5, hp: 0.2, slow: 0.5, coin: 5, acc: 2, d: '문제 읽는 시간 2~6초 · 틀리면 ❤️-20%·💰-5 · 2번 연속 틀리면 5초 많이 느려짐 · 정답률에 따라 코인 ×0.5~1.3' }
+};
+function pcfg() { return PCFG[PEN] || PCFG[2]; }
+// 문제를 읽는 시간(이 시간 동안은 답을 누를 수 없어요). 글자 수에 따라 1.5~4초 × 규칙 배수
+function readSec(p, fast) {
+  var c = pcfg(); if (!c.read || window.__NOREAD) return 0;   // __NOREAD: 자동 시험용
+  var n = String(p.q).replace(/<[^>]+>/g, '').length + (p.opts ? p.opts.join('').replace(/<[^>]+>/g, '').length : 0) + (p.fig ? 15 : 0);
+  var s = Math.max(1.5, Math.min(4, 1 + n / 30)) * c.read; return fast ? Math.round(s * 4) / 10 : s;
+}
+// 한 판의 정답률에 따른 코인 배수(5문제 이상 풀었을 때)
+function accMul(ok, n) {
+  var c = pcfg(); if (!c.acc || n < 5) return 1; var a = ok / n;
+  if (a >= 0.9) return 1.3; if (a >= 0.75) return 1.15; if (a >= 0.6) return 1;
+  return c.acc === 2 ? (a >= 0.4 ? 0.7 : 0.5) : (a >= 0.4 ? 0.85 : 0.7);
+}
 var EN_MAX = 50;
 function addEnergy(n) { S.en = Math.min(EN_MAX, (S.en || 0) + n); }
 function invBy(uid) { for (var i = 0; i < S.inv.length; i++) if (S.inv[i].uid === uid) return S.inv[i]; return null; }
@@ -1316,7 +1352,7 @@ var Net = (function () {
   function day(t) { return new Date(t + 9 * 3600000).toISOString().slice(0, 10); }
   function P(fn) { try { return fn(); } catch (e) { return Promise.reject(e); } }
   function cleanRow(r) {   // 저장하는 요약은 숫자만 정리해서
-    var o = { name: String(r.name).slice(0, 10), cls: String(r.cls).slice(0, 20), ok: r.ok | 0, n: r.n | 0, star: r.star | 0, pow: r.pow | 0, runs: r.runs | 0, tr: r.tr | 0, cur: r.cur | 0, rush: r.rush | 0, bs: {}, ls: {}, ty: {} };
+    var o = { name: String(r.name).slice(0, 10), cls: String(r.cls).slice(0, 20), ok: r.ok | 0, n: r.n | 0, star: r.star | 0, pow: r.pow | 0, runs: r.runs | 0, tr: r.tr | 0, cur: r.cur | 0, rush: r.rush | 0, fw: r.fw | 0, tq: [(r.tq && r.tq[0]) | 0, Math.round((r.tq && r.tq[1]) || 0)], bs: {}, ls: {}, ty: {} };
     Object.keys(r.bs || {}).forEach(function (k) { if (/^L\d+$/.test(k)) o.bs[k] = r.bs[k] | 0; });
     Object.keys(r.ls || {}).forEach(function (k) { if (/^L\d+$/.test(k)) o.ls[k] = [r.ls[k][0] | 0, r.ls[k][1] | 0]; });
     Object.keys(r.ty || {}).forEach(function (k) { if (/^\d+-[a-z0-9]+$/.test(k)) o.ty[k] = [r.ty[k][0] | 0, r.ty[k][1] | 0]; });
@@ -1354,6 +1390,7 @@ var Net = (function () {
     return ok ? { ok: true } : { ok: false, msg: f.until ? '5번 틀려서 10분 동안 잠겼어요.' : '비밀번호가 틀렸어요. (' + (5 - f.n) + '번 더 틀리면 10분 잠금)' };
   }
   function gateMsg(what, who, arg, t) {
+    if (what === 'pen') return who + ': 오답 규칙을 「' + PCFG[arg].n + '」' + (PCFG[arg].n === '강하게' ? '로' : '으로') + ' 정했어요. (' + PCFG[arg].d + ')';
     if (what === 'qlv') return who + ': 문제 양을 「' + QCFG[arg].n + '」으로 정했어요. (❓상자 ' + QCFG[arg].box + '초마다 · 출격 전 ⚡' + QCFG[arg].energy + ' · 보스 방패 문제 ' + QCFG[arg].shield + '개씩)';
     if (what === 'les') return who + ': 오늘의 작전을 ' + arg + '차시 「' + LES[arg].name + '」로 정했어요. 1~' + arg + '차시 문제가 섞여 나와요.';
     if (what === 'open') return who + ': 지금부터 ' + arg + '분 동안 게임을 열었어요(' + new Date(t + arg * 60000 + 9 * 3600000).toISOString().slice(11, 16) + '까지).';
@@ -1363,6 +1400,7 @@ var Net = (function () {
   function gateUpd(what, arg, t) {
     if (what === 'les') return { les: Math.max(1, Math.min(10, arg | 0)) };
     if (what === 'qlv') return { qlv: Math.max(1, Math.min(3, arg | 0)) };
+    if (what === 'pen') return { pen: Math.max(1, Math.min(3, arg | 0)) };
     if (what === 'open') return { until: t + Math.max(1, Math.min(600, arg | 0)) * 60000, shut: null };
     if (what === 'close') return { until: null, shut: day(t) };
     return { hours: arg || null };
@@ -1389,9 +1427,9 @@ var Net = (function () {
         var saved = Store.get('n_tpin_h', '');
         if (!saved || pinHash(pin) !== saved) return Promise.resolve({ ok: false, msg: '비밀번호가 틀렸어요.' });
         var who = cls || '모든 반', t = Date.now();
-        if (what === 'les' || what === 'qlv' || what === 'open' || what === 'close' || what === 'hours') {
+        if (what === 'les' || what === 'qlv' || what === 'pen' || what === 'open' || what === 'close' || what === 'hours') {
           var o = LS.open(), k = cls ? key(cls) : '_all', u = gateUpd(what, arg, t); o[k] = o[k] || {}; Object.keys(u).forEach(function (x) { if (u[x] == null) delete o[k][x]; else o[k][x] = u[x]; }); Store.set('n_open', o); LS.cbs.forEach(function (f) { f(); });
-          return Promise.resolve({ ok: true, msg: gateMsg(what, who, what === 'les' ? u.les : what === 'qlv' ? u.qlv : arg, t) });
+          return Promise.resolve({ ok: true, msg: gateMsg(what, who, what === 'les' ? u.les : what === 'qlv' ? u.qlv : what === 'pen' ? u.pen : arg, t) });
         }
         if (what === 'rows') return this.rank(cls).then(function (r) { return { ok: true, rows: r }; });
         if (what === 'reset') { var cs = cls ? [key(cls)] : this.classes().map(key); cs.forEach(function (c) { Store.set('n_rank_' + c, {}); try { Object.keys(localStorage).forEach(function (kk) { if (kk.indexOf(Store.P + 'n_save_' + c + '_') === 0) localStorage.removeItem(kk); }); } catch (e) {} }); var o2 = LS.open(), kk2 = cls ? key(cls) : '_all'; o2[kk2] = o2[kk2] || {}; o2[kk2].reset = t; Store.set('n_open', o2); return Promise.resolve({ ok: true, msg: who + ' 기록을 초기화했어요.' }); }
@@ -1463,7 +1501,7 @@ var Net = (function () {
       var bad = checkPin(pin); if (bad) return Promise.resolve({ ok: false, msg: bad });
       var who = cls || '모든 반', t = now(), self = this;
       if (what === 'hours') { arg = String(arg || '').replace(/\s/g, '').replace('~', '-'); if (arg && !/^\d{1,2}:\d{2}-\d{1,2}:\d{2}$/.test(arg)) return Promise.resolve({ ok: false, msg: '시간은 08:30-15:00처럼 써 주세요.' }); }
-      if (what === 'les' || what === 'qlv' || what === 'open' || what === 'close' || what === 'hours') return P(function () { var u = gateUpd(what, arg, t); return R('open/' + (cls ? key(cls) : '_all')).update(u).then(function () { return { ok: true, msg: gateMsg(what, who, what === 'les' ? u.les : what === 'qlv' ? u.qlv : arg, t) }; }); });
+      if (what === 'les' || what === 'qlv' || what === 'pen' || what === 'open' || what === 'close' || what === 'hours') return P(function () { var u = gateUpd(what, arg, t); return R('open/' + (cls ? key(cls) : '_all')).update(u).then(function () { return { ok: true, msg: gateMsg(what, who, what === 'les' ? u.les : what === 'qlv' ? u.qlv : what === 'pen' ? u.pen : arg, t) }; }); });
       if (what === 'rows') { if (!cls) return Promise.resolve({ ok: false, msg: '현황을 보려면 반 코드를 써 주세요.' }); return self.rank(cls).then(function (r) { return { ok: true, rows: r }; }); }
       if (what === 'reset') return P(function () { var st = { reset: t }; return Promise.all([R(cls ? 'rank/' + key(cls) : 'rank').remove(), R(cls ? 'save/' + key(cls) : 'save').remove(), R('open/' + (cls ? key(cls) : '_all')).update(st)]).then(function () { return { ok: true, msg: who + ' 기록(장비·코인·정답 기록)을 초기화했어요. 다른 단원 기록은 그대로예요.' }; }); });
       return Promise.resolve({ ok: false, msg: '알 수 없는 메뉴예요.' });
@@ -1572,8 +1610,9 @@ function update(dt) {
   if (KEYS.ArrowUp || KEYS.w || KEYS.W) my -= 1; if (KEYS.ArrowDown || KEYS.s || KEYS.S) my += 1;
   if (JOY.on) { mx = JOY.dx; my = JOY.dy; }
   var ml = Math.hypot(mx, my);
-  if (ml > 0.08) { if (ml > 1) { mx /= ml; my /= ml; } h.x += mx * D.spd * dt; h.y += my * D.spd * dt; h.moving = true; if (Math.abs(mx) > 0.1) h.face = mx > 0 ? 1 : -1; var al = Math.hypot(mx, my); h.ax = mx / al; h.ay = my / al; } else h.moving = false;
+  if (ml > 0.08) { if (ml > 1) { mx /= ml; my /= ml; } var slw = B.slowT > 0 ? 1 - pcfg().slow : 1; h.x += mx * D.spd * slw * dt; h.y += my * D.spd * slw * dt; h.moving = true; if (Math.abs(mx) > 0.1) h.face = mx > 0 ? 1 : -1; var al = Math.hypot(mx, my); h.ax = mx / al; h.ay = my / al; } else h.moving = false;
   if (h.inv > 0) h.inv -= dt;
+  if (B.slowT > 0) B.slowT -= dt;
   if (B.rage > 0) B.rage -= dt;
   if (B.st.regen || B.D.regen) { h.hp = Math.min(h.max, h.hp + (B.st.regen + B.D.regen * h.max) * dt); }
   spawn(dt);
@@ -2321,11 +2360,17 @@ function ask(o) {
   }
   $('#qCalcB').classList.toggle('hide', !p.calc); $('#qCalc').classList.add('hide'); $('#qPad').classList.add('hide');
   $('#qFb').classList.add('hide'); $('#qFb').innerHTML = ''; $('#qTools').classList.remove('hide');
+  // 📖 문제 읽는 시간: 이 시간 동안은 답을 누를 수 없어요(찍기 방지)
+  var rs = readSec(p, o.fast); QS.t0 = Date.now() + rs * 1000; QS.lock = rs > 0;
+  if (rs > 0) {
+    A.classList.add('locked'); A.insertAdjacentHTML('afterbegin', '<div class="rlock"><i style="animation-duration:' + rs + 's"></i><span>📖 문제를 끝까지 읽어요…</span></div>');
+    var qs = QS; setTimeout(function () { if (QS !== qs) return; QS.lock = false; A.classList.remove('locked'); var r = A.querySelector('.rlock'); if (r) r.remove(); }, rs * 1000);
+  }
   openModal('mQ'); $('#qCard').scrollTop = 0; padClear();
 }
 function showNum() { var el = $('#qNum'); if (el) el.textContent = QS.val || ' '; }
 function keyIn(k) {
-  if (!QS || QS.done || QS.p.kind !== 'num') return;
+  if (!QS || QS.done || QS.lock || QS.p.kind !== 'num') return;
   if (k === '⌫') QS.val = QS.val.slice(0, -1);
   else if (k === '.') { if (QS.val.indexOf('.') < 0) QS.val = (QS.val || '0') + '.'; }
   else if (QS.val.length < 10) QS.val = (QS.val === '0' ? '' : QS.val) + k;
@@ -2337,13 +2382,30 @@ document.addEventListener('keydown', function (e) {
   if (QS.p.kind === 'num') { if (/^[0-9]$/.test(e.key)) keyIn(e.key); else if (e.key === '.') keyIn('.'); else if (e.key === 'Backspace') keyIn('⌫'); else if (e.key === 'Enter') $('#qOk').click(); }
   else if (/^[1-4]$/.test(e.key) && +e.key <= QS.p.opts.length) answer(+e.key - 1);
 });
+// 전투 중 정답·오답 결과(연속 정답 보너스 · 오답 벌칙). 재도전 문제·부활 문제·문제 러시에는 벌칙이 없어요.
+function penalty(ok, o, sec) {
+  if (!B || B.over || o.fast) return '';
+  if (ok) {
+    B.wrongRun = 0; B.streak = (B.streak | 0) + 1;
+    if (B.streak % 5 === 0) { B.gem += 5; setTimeout(function () { banner('🔥 ' + B.streak + '문제 연속 정답! 💎5'); }, 300); return '(🔥' + B.streak + '연속 +💎5)'; }
+    return B.streak >= 2 ? '(🔥' + B.streak + '연속)' : '';
+  }
+  B.streak = 0; if (o.again || o.noPen || B.h.hp <= 0) return '';
+  var c = pcfg(), out = []; B.wrongRun = (B.wrongRun | 0) + 1;
+  if (c.hp) { var d = Math.round(B.h.max * c.hp); B.h.hp = Math.max(1, B.h.hp - d); out.push('❤️-' + d); }
+  if (c.coin && B.coin > 0) { var cc = Math.min(B.coin, c.coin); B.coin -= cc; out.push('💰-' + cc); }
+  if (c.slow && B.wrongRun >= 2) { B.slowT = 5; out.push('😵 5초 느려짐'); }
+  if (sec < 3 && c.hp) out.push('· 너무 빨리 골랐어요');
+  return out.length ? '(' + out.join(' ') + ')' : '';
+}
 function answer(v) {
-  if (!QS || QS.done) return; QS.done = true;
-  var p = QS.p, o = QS.o, ok = Q5.check(p, v);
+  if (!QS || QS.done || QS.lock) return; QS.done = true;
+  var p = QS.p, o = QS.o, ok = Q5.check(p, v), sec = Math.max(0, (Date.now() - (QS.t0 || Date.now())) / 1000);
   var my = p.kind === 'choice' ? p.opts[v] : (Q5.f(parseFloat(v)) + (p.unit ? ' ' + p.unit : ''));
-  logAns(p, ok, my);
+  logAns(p, ok, my, sec);
   if (B && !B.over) { B.q.n++; if (ok) B.q.ok++; else B.q.wrong.push(S.wrong[0]); }
   var rew = o.reward ? o.reward(ok) : '';
+  var pen = penalty(ok, o, sec); if (pen) rew = (rew ? rew + ' ' : '') + pen;
   beep(ok ? 'ok' : 'ng');
   if (p.kind === 'choice') $$('#qAns .opt').forEach(function (b, i) { b.disabled = true; if (i === p.ans) b.classList.add('right'); else if (i === v) b.classList.add('wrong'); });
   else { $$('#qAns .key, #qOk').forEach(function (b) { b.disabled = true; }); $('#qAns .numbox').classList.add(ok ? 'right' : 'wrong'); }
@@ -2362,7 +2424,7 @@ function answer(v) {
   fb.classList.remove('hide'); $('#qTools').classList.add('hide');
   setTimeout(function () { fb.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }, 30);
   $('#qNext').onclick = function () {
-    if (canRetry) { var r = o.retry; ask({ p: Q5.similar(p), head: r.head, reward: r.reward, next: r.next, done: r.done || o.done, retry: null }); return; }
+    if (canRetry) { var r = o.retry; ask({ p: Q5.similar(p), head: r.head, reward: r.reward, next: r.next, done: r.done || o.done, retry: null, again: true }); return; }
     closeModal('mQ'); QS = null; if (B) hud(); o.done(ok);
   };
   if (canRetry) $('#qSkip').onclick = function () { closeModal('mQ'); QS = null; if (B) hud(); o.done(false); };
@@ -2404,7 +2466,7 @@ function openBossQ(n) {
     next: function () { return '계속 싸우기 ▶'; }, done: function () { resume(); }, retry: null });
 }
 function openRevive() {
-  ask({ p: newQ(2), head: '✨ 부활 문제! 맞히면 다시 일어나요', reward: function () { return ''; },
+  ask({ p: newQ(2), head: '✨ 부활 문제! 맞히면 다시 일어나요', noPen: true, reward: function () { return ''; },
     next: function (ok) { return ok ? '✨ 부활하기' : '결과 보기'; }, done: function (ok) { if (ok) { revive(); resume(); } else finishRun(false); }, retry: null });
 }
 // 계산기(소수 나눗셈 문제에만 나와요)
@@ -2452,7 +2514,7 @@ function finishRun(win) {
   B.over = true; B.paused = true; B.modal = 'res';
   closeModal('mQ'); closeModal('mSk'); closeModal('mMsg');
   var sec = Math.floor(B.t), L = S.les[B.L];
-  var RM = rewMul(B.L), cTime = Math.floor(sec / 2), cKill = Math.floor(B.kills / 4), cWin = win ? 100 : 0, coins = Math.round((B.coin + cTime + cKill + cWin) * RM);
+  var RM = rewMul(B.L), cTime = Math.floor(sec / 2), cKill = Math.floor(B.kills / 4), cWin = win ? 100 : 0, AM = accMul(B.q.ok, B.q.n), coins = Math.round((B.coin + cTime + cKill + cWin) * RM * AM);
   var acc = B.q.n ? B.q.ok / B.q.n : 0;
   var score = sec * 2 + B.kills + B.q.ok * 30 + B.bossKills * 300 + (win ? 500 : 0), kB = 'L' + B.L, prevBest = S.bs[kB] || 0;
   if (score > prevBest) S.bs[kB] = score;
@@ -2466,7 +2528,7 @@ function finishRun(win) {
   var h = '<div class="rgrid"><div><small>생존 시간</small><b>' + mm + ':' + (ss < 10 ? '0' : '') + ss + '</b></div><div><small>처치</small><b>' + nf(B.kills) + '</b></div><div><small>레벨</small><b>' + B.lv + '</b></div><div><small>문제</small><b>' + B.q.ok + '/' + B.q.n + '</b></div></div>' +
     '<div class="rscore">🏅 점수 <b>' + nf(score) + '</b>' + (score > prevBest ? ' <span class="newb">최고 기록!</span>' : ' <small>(최고 ' + nf(prevBest) + ')</small>') + '<small class="sf">생존 ' + sec + '초×2 + 처치 ' + B.kills + ' + 정답 ' + B.q.ok + '×30' + (B.bossKills ? ' + 보스 ' + B.bossKills + '×300' : '') + (win ? ' + 생존 성공 500' : '') + '</small></div>';
   h += '<div class="rstars">' + ST.map(function (t, i) { return '<div class="' + (L.stars[i] ? 'on' : '') + (newStar.indexOf(i) >= 0 ? ' new' : '') + '"><span>★</span><small>' + t + (newStar.indexOf(i) >= 0 ? '<br><b>NEW +💎' + SG[i] + '</b>' : '') + '</small></div>'; }).join('') + '</div>';
-  h += '<div class="rrew"><div>💰 <b>+' + nf(coins) + '</b><small>(주운 코인 ' + B.coin + ' + 시간 ' + cTime + ' + 처치 ' + cKill + (win ? ' + 생존 100' : '') + ')' + (RM > 1 ? ' × ' + B.L + '차시 보상 ' + RM.toFixed(2) : '') + '</small></div><div>💎 <b>+' + nf(gems) + '</b><small>문제 정답 ' + B.gem + (starGem ? ' · 새 별 ' + starGem : '') + '</small></div></div>';
+  h += '<div class="rrew"><div>💰 <b>+' + nf(coins) + '</b><small>(주운 코인 ' + B.coin + ' + 시간 ' + cTime + ' + 처치 ' + cKill + (win ? ' + 생존 100' : '') + ')' + (RM > 1 ? ' × ' + B.L + '차시 보상 ' + RM.toFixed(2) : '') + (AM !== 1 ? ' × 🎯정답률 ' + AM : '') + '</small>' + (pcfg().acc && B.q.n >= 5 ? '<small class="accm ' + (AM >= 1 ? 'up' : 'down') + '">🎯 이번 판 정답률 ' + Math.round(acc * 100) + '% → 코인 ×' + AM + (AM < 1 ? ' (천천히 읽고 풀면 코인이 늘어요!)' : '') + '</small>' : '') + '</div><div>💎 <b>+' + nf(gems) + '</b><small>문제 정답 ' + B.gem + (starGem ? ' · 새 별 ' + starGem : '') + '</small></div></div>';
   if (B.q.wrong.length) h += '<details class="rwrong"><summary>📒 이번 판 틀린 문제 ' + B.q.wrong.length + '개 다시 보기</summary>' + B.q.wrong.map(wrongCard).join('') + '</details>';
   else if (B.q.n) h += '<p class="center good">🎉 이번 판 문제를 모두 맞혔어요!</p>';
   msgBox(win ? '🏆 생존 성공!' : '💫 작전 종료', h, [['🏠 로비로', function () { endBattle(); }, ''], ['🔁 다시 출격', function () { endBattle(true); if (!tryStart()) { showScreen('lobby'); renderLobby(); } }, 'y']]);
@@ -2509,13 +2571,14 @@ function tInit() {
   $('#tLes').innerHTML = LES.slice(1).map(function (l) { return '<button class="lesb" data-tl="' + l.n + '"><b>' + l.n + '</b><small>' + l.name + '</small></button>'; }).join('');
   $$('#tLes [data-tl]').forEach(function (b) { b.onclick = function () { tRun('les', +b.dataset.tl); }; });
   $$('#tQlv [data-q]').forEach(function (b) { b.onclick = function () { tRun('qlv', +b.dataset.q); }; });
+  $$('#tPen [data-p]').forEach(function (b) { b.onclick = function () { tRun('pen', +b.dataset.p); }; });
   if (Net.local) { var cs = Net.classes(); $('#tClsList').innerHTML = cs.length ? '이 기기의 반: ' + cs.map(function (c) { return '<button class="chip" data-c="' + esc(c) + '">' + esc(c) + '</button>'; }).join('') : ''; $$('#tClsList .chip').forEach(function (b) { b.onclick = function () { $('#tCls').value = b.dataset.c; tWatch(); }; }); }
   tWatch();
 }
 function tCls() { return cleanName($('#tCls').value, 20); }
 function tWatch() {   // 고른 반의 지금 차시를 보여 줘요
   if (TD.gateU) TD.gateU(); var cl = tCls();
-  TD.gateU = Net.gate(cl || '_none_', function (a, c) { var n = +(cl ? c.les : 0) || +a.les || 1; TD.cur = n; var q = +(cl ? c.qlv : 0) || +a.qlv || 2; $$('#tQlv [data-q]').forEach(function (b) { b.classList.toggle('on', +b.dataset.q === q); }); $$('#tLes [data-tl]').forEach(function (b) { b.classList.toggle('on', +b.dataset.tl === n); }); $('#tCurTxt').textContent = (cl || '모든 반') + '의 오늘의 작전: ' + n + '차시 「' + LES[n].name + '」' + (cl && !c.les && a.les ? ' (모든 반 설정을 따라요)' : ''); });
+  TD.gateU = Net.gate(cl || '_none_', function (a, c) { var n = +(cl ? c.les : 0) || +a.les || 1; TD.cur = n; var q = +(cl ? c.qlv : 0) || +a.qlv || 2; $$('#tQlv [data-q]').forEach(function (b) { b.classList.toggle('on', +b.dataset.q === q); }); var pn = +(cl ? c.pen : 0) || +a.pen || 2; $$('#tPen [data-p]').forEach(function (b) { b.classList.toggle('on', +b.dataset.p === pn); }); $$('#tLes [data-tl]').forEach(function (b) { b.classList.toggle('on', +b.dataset.tl === n); }); $('#tCurTxt').textContent = (cl || '모든 반') + '의 오늘의 작전: ' + n + '차시 「' + LES[n].name + '」' + (cl && !c.les && a.les ? ' (모든 반 설정을 따라요)' : ''); });
 }
 function tMsg(t, ok) { var m = $('#tMsg'); m.textContent = (ok === false ? '⚠️ ' : ok ? '✅ ' : '') + t; m.className = 'tmsg' + (ok === false ? ' bad' : ''); }
 function tRun(what, arg) {
@@ -2559,12 +2622,12 @@ function drawDash() {
       '<div class="tqd" data-id="' + a.id + '">' + (p ? sampleHtml(p) : '') + '<p class="note">이 유형을 어려워하는 학생: ' + a.names.slice(0, 12).map(esc).join(', ') + (a.names.length > 12 ? ' 외 ' + (a.names.length - 12) + '명' : '') + '</p><button class="btn sm" data-re="' + a.id + '">🔄 다른 숫자로 예시 보기</button></div></details>';
   });
   // 학생 표
-  var cols = [['name', '이름'], ['n', '푼 문제'], ['acc', '정답률'], ['cacc', cur + '차시 정답률'], ['best', cur + '차시 최고점'], ['rush', '러시'], ['t', '마지막']];
-  var data = rows.map(function (r) { var c = r.ls && r.ls['L' + cur]; return { r: r, name: r.name, n: r.n | 0, acc: pct(r.ok, r.n), cacc: c ? pct(c[0], c[1]) : null, best: (r.bs && r.bs['L' + cur]) | 0, star: r.star | 0, rush: r.rush | 0, t: r.t || 0 }; });
+  var cols = [['name', '이름'], ['n', '푼 문제'], ['acc', '정답률'], ['cacc', cur + '차시 정답률'], ['best', cur + '차시 최고점'], ['fw', '빠른 오답'], ['avg', '평균 풀이(초)'], ['rush', '러시'], ['t', '마지막']];
+  var data = rows.map(function (r) { var c = r.ls && r.ls['L' + cur]; return { r: r, name: r.name, n: r.n | 0, acc: pct(r.ok, r.n), cacc: c ? pct(c[0], c[1]) : null, best: (r.bs && r.bs['L' + cur]) | 0, star: r.star | 0, rush: r.rush | 0, fw: r.fw | 0, fwp: (r.n | 0) ? Math.round(100 * (r.fw | 0) / r.n) : 0, avg: r.tq && r.tq[0] ? Math.round(r.tq[1] / r.tq[0] * 10) / 10 : null, t: r.t || 0 }; });
   data.sort(function (x, y) { var a = x[TD.sort], b = y[TD.sort]; if (a == null) a = TD.asc ? 999 : -1; if (b == null) b = TD.asc ? 999 : -1; return (a < b ? -1 : a > b ? 1 : 0) * (TD.asc ? 1 : -1); });
   h += '<h4>👥 학생별 기록 <small>(제목을 누르면 정렬 · 이름을 누르면 자세히)</small></h4><div class="tscroll"><table class="tt"><tr>' + cols.map(function (c) { return '<th data-s="' + c[0] + '">' + c[1] + (TD.sort === c[0] ? (TD.asc ? ' ▲' : ' ▼') : '') + '</th>'; }).join('') + '</tr>';
-  data.forEach(function (d) { h += '<tr><td><button class="lnk" data-st="' + esc(d.name) + '">' + esc(d.name) + '</button></td><td>' + d.n + '</td><td class="' + accCls(d.acc) + '">' + (d.acc == null ? '-' : d.acc + '%') + '</td><td class="' + accCls(d.cacc) + '">' + (d.cacc == null ? '-' : d.cacc + '%') + '</td><td>' + (d.best ? nf(d.best) : '-') + '</td><td>' + (d.rush || '-') + '</td><td><small>' + ago(d.t) + '</small></td></tr>'; });
-  h += '</table></div><p class="note">정답률 색: <span class="low">60% 미만</span> · <span class="mid">60~79%</span> · <span class="hi">80% 이상</span></p>';
+  data.forEach(function (d) { h += '<tr><td><button class="lnk" data-st="' + esc(d.name) + '">' + esc(d.name) + '</button></td><td>' + d.n + '</td><td class="' + accCls(d.acc) + '">' + (d.acc == null ? '-' : d.acc + '%') + '</td><td class="' + accCls(d.cacc) + '">' + (d.cacc == null ? '-' : d.cacc + '%') + '</td><td>' + (d.best ? nf(d.best) : '-') + '</td><td class="' + (d.fwp >= 15 ? 'low' : d.fwp >= 8 ? 'mid' : '') + '">' + (d.fw ? d.fw + ' <small>(' + d.fwp + '%)</small>' : '-') + '</td><td class="' + (d.avg != null && d.avg < 5 ? 'low' : '') + '">' + (d.avg == null ? '-' : d.avg) + '</td><td>' + (d.rush || '-') + '</td><td><small>' + ago(d.t) + '</small></td></tr>'; });
+  h += '</table></div><p class="note">정답률 색: <span class="low">60% 미만</span> · <span class="mid">60~79%</span> · <span class="hi">80% 이상</span><br>⚡ <b>빠른 오답</b>: 읽기 시간이 끝나고 3초 안에 고른 답이 틀린 횟수(찍었을 가능성). 푼 문제의 15% 이상이면 빨간색이에요. <b>평균 풀이</b>가 5초보다 짧아도 빨간색이에요. 이 기록은 이번 업데이트 뒤부터 쌓여요.</p>';
   box.innerHTML = h;
   $$('#tDash th[data-s]').forEach(function (th) { th.onclick = function () { var s = th.dataset.s; if (TD.sort === s) TD.asc = !TD.asc; else { TD.sort = s; TD.asc = s === 'name' || s === 'acc' || s === 'cacc'; } drawDash(); }; });
   $$('#tDash [data-st]').forEach(function (b) { b.onclick = function () { studentDetail(b.dataset.st); }; });
@@ -2585,8 +2648,8 @@ function tCsv() {
   var rows = TD.rows; if (!rows.length) { tMsg('먼저 「현황 불러오기」를 눌러 주세요.', false); return; }
   var head = ['반', '이름', '푼 문제', '맞힌 문제', '정답률(%)'];
   for (var n = 1; n <= 10; n++) head.push(n + '차시 정답률(%)', n + '차시 푼 문제');
-  head.push('별(30개 중)', '오늘 차시 최고점', '문제 러시 최고', '출격 수', '훈련 수', '마지막 저장');
-  var out = [head].concat(rows.map(function (r) { var a = [r.cls, r.name, r.n | 0, r.ok | 0, pct(r.ok, r.n) == null ? '' : pct(r.ok, r.n)]; for (var n = 1; n <= 10; n++) { var v = r.ls && r.ls['L' + n]; a.push(v ? pct(v[0], v[1]) : '', v ? v[1] : 0); } a.push(r.star | 0, (r.bs && r.bs['L' + (TD.cur || 1)]) | 0, r.rush | 0, r.runs | 0, r.tr | 0, r.t ? new Date(r.t).toLocaleString('ko-KR') : ''); return a; }));
+  head.push('별(30개 중)', '오늘 차시 최고점', '문제 러시 최고', '출격 수', '훈련 수', '빠른 오답', '평균 풀이(초)', '마지막 저장');
+  var out = [head].concat(rows.map(function (r) { var a = [r.cls, r.name, r.n | 0, r.ok | 0, pct(r.ok, r.n) == null ? '' : pct(r.ok, r.n)]; for (var n = 1; n <= 10; n++) { var v = r.ls && r.ls['L' + n]; a.push(v ? pct(v[0], v[1]) : '', v ? v[1] : 0); } a.push(r.star | 0, (r.bs && r.bs['L' + (TD.cur || 1)]) | 0, r.rush | 0, r.runs | 0, r.tr | 0, r.fw | 0, r.tq && r.tq[0] ? Math.round(r.tq[1] / r.tq[0] * 10) / 10 : '', r.t ? new Date(r.t).toLocaleString('ko-KR') : ''); return a; }));
   var csv = '﻿' + out.map(function (r) { return r.map(function (v) { v = String(v == null ? '' : v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }).join(','); }).join('\r\n');
   if (Net.local) { try { navigator.clipboard.writeText(csv.replace('﻿', '').replace(/,/g, '\t')).then(function () { tMsg('표를 복사했어요. 엑셀이나 구글 시트에 붙여 넣으세요.', true); }, function () { tMsg('복사가 막혀 있어요. 깃허브판에서는 CSV로 내려받을 수 있어요.', false); }); } catch (e) { tMsg('복사가 막혀 있어요.', false); } return; }
   var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = '동글특공대_' + tCls() + '_' + new Date().toISOString().slice(0, 10) + '.csv'; document.body.appendChild(a); a.click(); a.remove(); tMsg(rows.length + '명의 기록을 CSV로 내려받았어요.', true);
@@ -2641,7 +2704,7 @@ function renderPlay() {
   box.appendChild(me);
   var best = S.bs['L' + CUR] || 0, acc = S.ls['L' + CUR];
   box.insertAdjacentHTML('beforeend', '<div class="mission card"><div class="mtag">🎯 오늘의 작전 <small>선생님이 정해요</small></div><div class="mrow"><div class="lno big">' + CUR + '</div><div><b class="mname">' + CUR + '차시 · ' + I.name + '</b><small>' + I.topic + ' · ' + I.pg + '</small><small class="cum">📚 ' + (CUR > 1 ? '1~' + CUR + '차시 문제가 섞여 나와요 (오늘 차시가 절반 넘게)' : '1차시 문제가 나와요') + '</small></div></div>' +
-    '<div class="mstat"><span class="tagd">👾 적 체력 ×' + (diffHp(CUR) * GF.h).toFixed(1) + ' · 공격 ×' + (diffDmg(CUR) * GF.d).toFixed(2) + ' · 💰 보상 ×' + rewMul(CUR).toFixed(2) + '</span></div><div class="mstat"><small class="gfit">🎯 내 장비에 맞춘 몬스터: 체력 ' + Math.round(GF.h * 100) + '% · 공격 ' + Math.round(GF.d * 100) + '%' + (GF.r < 1 ? ' · 장비가 약한 만큼 몬스터도 약해요. 강화하면 더 빨리 잡아요' : ' · 장비가 좋아서 몬스터도 세졌어요') + '</small></div><div class="mstat"><span class="lst">' + L.stars.map(function (x) { return x ? '★' : '☆'; }).join('') + '</span><span>🏅 최고 ' + nf(best) + '점</span><span>✅ ' + (acc ? Math.round(100 * acc[0] / acc[1]) + '%' : '-') + '</span></div>' +
+    '<div class="mstat"><span class="tagd">👾 적 체력 ×' + (diffHp(CUR) * GF.h).toFixed(1) + ' · 공격 ×' + (diffDmg(CUR) * GF.d).toFixed(2) + ' · 💰 보상 ×' + rewMul(CUR).toFixed(2) + '</span></div><div class="mstat"><small class="gfit">📏 오답 규칙 「' + pcfg().n + '」: ' + pcfg().d + ' · 🔥 5문제 연속 정답마다 💎5</small></div><div class="mstat"><small class="gfit">🎯 내 장비에 맞춘 몬스터: 체력 ' + Math.round(GF.h * 100) + '% · 공격 ' + Math.round(GF.d * 100) + '%' + (GF.r < 1 ? ' · 장비가 약한 만큼 몬스터도 약해요. 강화하면 더 빨리 잡아요' : ' · 장비가 좋아서 몬스터도 세졌어요') + '</small></div><div class="mstat"><span class="lst">' + L.stars.map(function (x) { return x ? '★' : '☆'; }).join('') + '</span><span>🏅 최고 ' + nf(best) + '점</span><span>✅ ' + (acc ? Math.round(100 * acc[0] / acc[1]) + '%' : '-') + '</span></div>' +
     '<button class="btn g big" id="bGo">⚔️ 출격하기' + (qcfg().energy ? ' <small>⚡' + qcfg().energy + ' 필요 (지금 ⚡' + S.en + ')</small>' : '') + '</button></div>');
   box.insertAdjacentHTML('beforeend', '<button class="card rushc" id="bRush"><b>🏃 60초 문제 러시</b><small>60초 동안 최대한 많이! 정답마다 ⚡1 💰5 · 3개마다 💎1 · 내 최고 ' + (S.rush || 0) + '개 · 순위에 올라가요</small></button>');
   var wn = S.wrong.length;
@@ -2895,6 +2958,7 @@ function gateWatch(cls) {
   GATEU = Net.gate(cls, function (a, c) {
     GATE = { a: a || {}, c: c || {} };
     QLV = Math.max(1, Math.min(3, +GATE.c.qlv || +GATE.a.qlv || 2));
+    var pv = PEN; PEN = Math.max(1, Math.min(3, +GATE.c.pen || +GATE.a.pen || 2)); if (pv !== PEN && S && !B) renderLobby();
     var n = Math.max(1, Math.min(10, +GATE.c.les || +GATE.a.les || 1));
     if (n !== CUR) { var was = CUR; CUR = n; if (S && !B) { renderLobby(); if (was) toast('🎯 오늘의 작전이 ' + n + '차시 「' + LES[n].name + '」로 바뀌었어요!', 3); } }
   });
