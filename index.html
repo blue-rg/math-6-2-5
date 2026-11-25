@@ -1306,7 +1306,7 @@ function heroStats() {
   SLOTS.forEach(function (sl) {
     var it = eqItem(sl.k); if (!it) return; var v = itemVal(it), k = it.k;
     st[sl.st] += v;
-    if (sl.k === 'w') { st.sk = ITEM[it.id].sk; st.skLv = k >= 4 ? 3 : k >= 2 ? 2 : 1; }
+    if (sl.k === 'w') { st.sk = ITEM[it.id].sk; st.skLv = k >= 3 ? 2 : 1; }   // 시작 스킬 레벨: 영웅·전설 무기만 Lv2
     if (sl.k === 'a') st.dr += 0.04 * k;
     if (sl.k === 'n') st.mag += 0.15 * k;
     if (sl.k === 'b') st.regen += 0.4 * k;
@@ -1721,7 +1721,7 @@ function update(dt) {
 
 /* ---------- 적 등장 ---------- */
 function spawnAt(type, x, y, mulHp) {
-  var e = EN[type], m = (mulHp || 1) * (e.boss ? 1 + B.t / 300 : 1 + B.t / 130) * diffHp(B.L) * (B.fit || 1);
+  var e = EN[type], m = (mulHp || 1) * (e.boss ? 1 + B.t / 300 : 1 + B.t / 130) * diffHp(B.L) * (B.fit || 1) * (1 + (e.boss ? 0.18 : 0.3) * powUp());   // 진화·돌파만큼 적 체력도 올라가요
   var o = { id: (B.eid = (B.eid || 0) + 1), type: type, x: x, y: y, r: e.r, hp: e.hp * m, max: e.hp * m, spd: e.spd * (0.9 + Math.random() * 0.2), dmg: e.dmg * diffDmg(B.L) * (B.dfit || 1), xp: e.xp, kx: 0, ky: 0, fl: 0, hitT: {}, boss: e.boss || 0 };
   B.en.push(o); return o;
 }
@@ -1730,7 +1730,7 @@ function spawn(dt) {
   var t = B.t, ev = B.events;
   if (B.cleared) return;
   var bossOn = B.boss && B.boss.hp > 0;
-  var rate = Math.min(12, 1.1 + t / 30 + Math.max(0, t - 150) / 45) * (bossOn ? 0.35 : densityMul(t));   // 처음부터 적이 꽤 나오고, 화면이 비면 더 보내요
+  var rate = Math.min(16, (1.1 + t / 30 + Math.max(0, t - 150) / 45) * (1 + 0.22 * powUp())) * (bossOn ? 0.35 : densityMul(t));   // 진화·돌파가 많을수록 적도 더 많이   // 처음부터 적이 꽤 나오고, 화면이 비면 더 보내요
   B.spawnAcc += rate * dt;
   while (B.spawnAcc >= 1) {
     B.spawnAcc -= 1; if (B.en.length >= 220) break;
@@ -2100,14 +2100,13 @@ function banner(t) { var el = $('#banner'); el.textContent = t; el.classList.rem
 function skillChoices(n) {
   var acts = Object.keys(B.sk).filter(function (k) { return SK[k].act; }).length, pas = Object.keys(B.sk).filter(function (k) { return !SK[k].act; }).length;
   var pool = [];
-  ACTS.forEach(function (k) { var l = B.sk[k] || 0; if (l >= 5) return; if (!l && acts >= MAXA) return; pool.push({ k: k, w: (l >= 3 ? 4 : l ? 3 : 1.4) * (B.sk[PAIR[k]] ? 1.4 : 1) }); });   // 짝꿍(돌파 조합)을 가진 스킬은 더 자주 나와요
-  PASS.forEach(function (k) { var l = B.sk[k] || 0; if (l >= 5) return; if (!l && pas >= MAXP) return; pool.push({ k: k, w: (l ? 1.6 : 1) * (B.sk[PAIR_OF[k]] ? 2.2 : 1) }); });
+  // 카드 비율: 가진 스킬이든 새 스킬이든 고르게(공격 1.4 · 보조 1.0). 막는 스킬은 없어요.
+  // 다만 바로 전에 고른 스킬은 절반만 나와서, 처음 고른 스킬이 레벨 업마다 나오는 일을 줄여요.
+  var lastK = B.lastPick;
+  ACTS.forEach(function (k) { var l = B.sk[k] || 0; if (l >= 5) return; if (!l && acts >= MAXA) return; pool.push({ k: k, w: 1.4 * (k === lastK ? 0.5 : 1) }); });
+  PASS.forEach(function (k) { var l = B.sk[k] || 0; if (l >= 5) return; if (!l && pas >= MAXP) return; pool.push({ k: k, w: 1 * (k === lastK ? 0.5 : 1) }); });
   var out = [];
   while (out.length < n && pool.length) { var tot = pool.reduce(function (s, o) { return s + o.w; }, 0), r = Math.random() * tot, i = 0; for (; i < pool.length; i++) { r -= pool[i].w; if (r <= 0) break; } i = Math.min(i, pool.length - 1); out.push(pool[i].k); pool.splice(i, 1); }
-  // 💥 돌파 조합을 모으는 중이면 카드 하나는 꼭 그 조합 스킬로(가진 짝꿍이 있을 때)
-  var rel = Object.keys(B.sk).filter(function (k) { var l = B.sk[k] | 0; if (l >= 5) return false; var m = SK[k].act ? PAIR[k] : PAIR_OF[k]; return m && B.sk[m]; });
-  ACTS.concat(PASS).forEach(function (k) { if (B.sk[k]) return; var m = SK[k].act ? PAIR[k] : PAIR_OF[k]; if (m && (B.sk[m] | 0) >= 3 && (SK[k].act ? acts < MAXA : pas < MAXP)) rel.push(k); });   // Lv3 이상 스킬의 짝꿍이 아직 없으면 짝꿍도 후보
-  if (rel.length && out.length && !out.some(function (k) { return rel.indexOf(k) >= 0; })) out[out.length - 1] = rel[Math.floor(Math.random() * rel.length)];
   if (!out.length) out = ['heal', 'gold'];
   return out;
 }
@@ -2126,7 +2125,7 @@ function openSkills(n, after) {
       b.insertAdjacentHTML('beforeend', '<div><b>' + sk.n + ' <span class="lvtag' + ((sk.act && l === 4) || evoNote(k, l + 1).indexOf('evon') >= 0 ? ' evo' : '') + '">' + (sk.act && l === 4 ? 'Lv4 → ⭐진화' : l ? 'Lv' + l + ' → ' + (l + 1) : 'NEW') + '</span></b><p>' + dsc + '</p>' + evoNote(k, l + 1) + '<span class="dots">' + [1, 2, 3, 4, 5].map(function (i) { return '<i class="' + (i <= l ? 'on' : i === l + 1 ? 'nx' : '') + '"></i>'; }).join('') + '</span></div>');
     }
     b.onclick = function () {
-      if (k === 'heal') B.h.hp = Math.min(B.h.max, B.h.hp + B.h.max * 0.4); else if (k === 'gold') B.coin += 30; else { B.sk[k] = (B.sk[k] || 0) + 1; derive(); evoCheck(k); }
+      if (k === 'heal') B.h.hp = Math.min(B.h.max, B.h.hp + B.h.max * 0.4); else if (k === 'gold') B.coin += 30; else { B.sk[k] = (B.sk[k] || 0) + 1; B.lastPick = k; derive(); evoCheck(k); }
       beep('ok'); closeModal('mSk'); hudSkills(); if (after) after(); else resume();
     };
     box.appendChild(b);
@@ -2577,18 +2576,20 @@ function drawWaves(c) {
 var PAIR = { dart: 'p_crit', boom: 'p_spd', orbit: 'p_area', bomb: 'p_atk', laser: 'p_cd', aura: 'p_hp', wave: 'p_regen', bolt: 'p_xp', mine: 'p_mag', drone: 'p_coin' };
 var PAIR_OF = {}; Object.keys(PAIR).forEach(function (k) { PAIR_OF[PAIR[k]] = k; });
 var EVO = {
-  dart: { n: '황금 컴퍼스 비', d: '⭐ 진화! 황금 바늘이 적 3마리를 꿰뚫고, 3번째마다 12방향으로 쏟아져요' },
+  dart: { n: '황금 컴퍼스 비', d: '⭐ 진화! 황금 바늘이 적 3마리를 꿰뚫고, 4번째마다 12방향으로 쏟아져요' },
   boom: { n: '톱니 부메랑', d: '⭐ 진화! 톱니 부메랑 3개 · 가장 먼 곳에서 원 모양으로 폭발해요' },
   orbit: { n: '토성 고리', d: '⭐ 진화! 동그라미가 두 겹의 빛나는 고리가 되어 닿는 적을 계속 공격해요' },
   bomb: { n: '연쇄 폭탄', d: '⭐ 진화! 폭탄 3개 · 터진 자리에서 작은 폭탄 4개가 또 터져요' },
   laser: { n: '회전 지름 광선', d: '⭐ 진화! 광선이 반 바퀴 빙글 돌며 둘레의 적을 모두 쓸어요' },
   aura: { n: '태양 방어막', d: '⭐ 진화! 방어막 안의 적은 느려지고, 2.5초마다 햇빛이 크게 터져요' },
   wave: { n: '삼중 파동', d: '⭐ 진화! 파동이 세 번 퍼지고, 맞은 적은 잠깐 얼어붙어요' },
-  bolt: { n: '번개 폭풍', d: '⭐ 진화! 7마리에게 튀고, 하늘에서 번개 3개가 더 떨어져요' },
+  bolt: { n: '번개 폭풍', d: '⭐ 진화! 7마리에게 튀고, 하늘에서 번개 2개가 더 떨어져요' },
   mine: { n: '블랙홀 지뢰', d: '⭐ 진화! 터진 자리에 작은 블랙홀이 생겨 적을 모은 뒤 한 번 더 터져요' },
   drone: { n: '레이저 위성', d: '⭐ 진화! 위성 3개가 적을 꿰뚫는 레이저를 쏴요' }
 };
 Object.keys(EVO).forEach(function (k) { if (SK[k]) { SK[k].d[4] = EVO[k].d; SK[k].evo = EVO[k].n; } });
+// 👾 학생이 강해진 만큼 적도 강해져요: ⭐진화 1개 = 1, 💥돌파 1개 = 1.3
+function powUp() { if (!B) return 0; var n = 0; Object.keys(B.sk || {}).forEach(function (k) { if (SK[k] && SK[k].act && (B.sk[k] | 0) >= 5) n += 1; }); return n + 1.3 * Object.keys(B.bt || {}).length; }
 function evoOn(k) { return !!(B && B.sk && (B.sk[k] | 0) >= 5); }
 // 스킬을 고른 뒤: ⭐진화 · 💥돌파 확인
 function evoCheck(k) {
@@ -2609,13 +2610,13 @@ function evoNote(k, nextLv) {
   return out + '<p class="evhint">💥 돌파 조합: ' + SK[a].n + ' Lv' + la + '/5 + ' + SK[p].emo + ' ' + SK[p].n + ' Lv' + lp + '/5 → ' + BT[a].e + ' 「' + BT[a].n + '」</p>';
 }
 function evoGet(k) {   // 진화하는 순간 연출
-  var h = B.h; banner('⭐ ' + SK[k].n + ' → 「' + EVO[k].n + '」 진화!'); beep('lv');
+  var h = B.h; banner('⭐ ' + SK[k].n + ' → 「' + EVO[k].n + '」 진화!'); beep('lv'); setTimeout(function () { if (B) toast('👾 내가 강해진 만큼 적들도 더 강해졌어요!', 2); }, 1600);
   B.fx.push({ k: 'evoflash', x: h.x, y: h.y, t: 0, life: 0.9 });
 }
 // 다트: 3번째마다 12방향
 function evoDartRing(A) {
-  var h = B.h; B.dartN = (B.dartN | 0) + 1; if (B.dartN % 3) return;
-  for (var i = 0; i < 12; i++) { var a = PI2 * i / 12; B.pr.push({ k: 'dart', evo: 1, x: h.x, y: h.y, vx: Math.cos(a) * 430, vy: Math.sin(a) * 430, r: 7 * B.D.area, dmg: A * 0.8, life: 1.1, pierce: 3, hit: {} }); }
+  var h = B.h; B.dartN = (B.dartN | 0) + 1; if (B.dartN % 4) return;
+  for (var i = 0; i < 12; i++) { var a = PI2 * i / 12; B.pr.push({ k: 'dart', evo: 1, x: h.x, y: h.y, vx: Math.cos(a) * 430, vy: Math.sin(a) * 430, r: 7 * B.D.area, dmg: A * 0.6, life: 0.8, pierce: 2, hit: {} }); }
 }
 // 부메랑: 반환점에서 폭발
 function evoBoomBurst(p) {
@@ -2625,7 +2626,7 @@ function evoBoomBurst(p) {
 // 훌라 링 → 토성 고리(두 겹)
 function evoRing(dt, R, od) {
   var h = B.h; B.ring = { R: R, R2: R * 0.6, a: B.orbA }; B.ringT = (B.ringT || 0) - dt; if (B.ringT > 0) return; B.ringT = 0.3;
-  near(h.x, h.y, R + 40, function (e) { var dx = e.x - h.x, dy = e.y - h.y, d = Math.hypot(dx, dy) || 1; if (Math.abs(d - R) < e.r + 10 || Math.abs(d - B.ring.R2) < e.r + 8) hurt(e, od * 0.8, 40, dx / d, dy / d); });
+  near(h.x, h.y, R + 40, function (e) { var dx = e.x - h.x, dy = e.y - h.y, d = Math.hypot(dx, dy) || 1; if (Math.abs(d - R) < e.r + 10 || Math.abs(d - B.ring.R2) < e.r + 8) hurt(e, od * 0.65, 40, dx / d, dy / d); });
 }
 // 폭탄: 작은 폭탄 4개 연쇄
 function evoBombCluster(x, y, BR, bd) {
@@ -2637,7 +2638,7 @@ function evoBombCluster(x, y, BR, bd) {
   } });
 }
 // 광선: 반 바퀴 회전
-function evoSweep(a0, lw, ld) { var h = B.h; B.fx.push({ k: 'sweep', x: h.x, y: h.y, a0: a0, a: a0, w: lw, len: 520, dmg: ld * 0.55, hit: {}, t: 0, life: 0.85 }); }
+function evoSweep(a0, lw, ld) { var h = B.h; B.fx.push({ k: 'sweep', x: h.x, y: h.y, a0: a0, a: a0, w: lw, len: 360, dmg: ld * 0.45, hit: {}, t: 0, life: 0.85 }); }
 // 방어막: 느리게 + 주기적 폭발
 function evoAura(dt, R, ad) {
   var h = B.h; near(h.x, h.y, R + 30, function (e) { var dx = e.x - h.x, dy = e.y - h.y; if (dx * dx + dy * dy < (R + e.r) * (R + e.r)) e.slowT = 0.25; });
@@ -2648,13 +2649,13 @@ function evoAura(dt, R, ad) {
 // 번개: 하늘에서 4개 더
 function evoBoltStorm(bd) {
   var hw = VW / 2 / ZOOM, hh = VH / 2 / ZOOM, h = B.h, c = B.en.filter(function (e) { return !e.dead && Math.abs(e.x - h.x) < hw && Math.abs(e.y - h.y) < hh; });
-  for (var i = 0; i < 3 && c.length; i++) { var j = Math.floor(Math.random() * c.length), e = c.splice(j, 1)[0]; hurt(e, bd * 0.8); B.fx.push({ k: 'bolt', evo: 1, pts: [[e.x + 20, e.y - 260], [e.x - 10, e.y - 120], [e.x, e.y]], t: 0, life: 0.25 }); B.fx.push({ k: 'boomring', evo: 8, x: e.x, y: e.y, R: 30, t: 0, life: 0.25 }); }
+  for (var i = 0; i < 2 && c.length; i++) { var j = Math.floor(Math.random() * c.length), e = c.splice(j, 1)[0]; hurt(e, bd * 0.7); B.fx.push({ k: 'bolt', evo: 1, pts: [[e.x + 20, e.y - 260], [e.x - 10, e.y - 120], [e.x, e.y]], t: 0, life: 0.25 }); B.fx.push({ k: 'boomring', evo: 8, x: e.x, y: e.y, R: 30, t: 0, life: 0.25 }); }
 }
 // 지뢰: 블랙홀
 function evoWell(x, y, MR, md) { B.fx.push({ k: 'well', x: x, y: y, R: MR * 1.8, dmg: md * 0.4, BR: MR * 1.2, t: 0, life: 1.1, onEnd: function (f) { B.fx.push({ k: 'boomring', evo: 9, x: f.x, y: f.y, R: f.BR, t: 0, life: 0.35 }); beep('boom'); near(f.x, f.y, f.BR + 30, function (e) { var dx = e.x - f.x, dy = e.y - f.y; if (dx * dx + dy * dy < (f.BR + e.r) * (f.BR + e.r)) hurt(e, f.dmg, 60, dx / (Math.hypot(dx, dy) || 1), dy / (Math.hypot(dx, dy) || 1)); }); } }); }
 // 위성: 꿰뚫는 레이저
 function evoDroneBeam(x, y, a, dm) {
-  var len = 320, ux = Math.cos(a), uy = Math.sin(a); B.fx.push({ k: 'dbeam', x: x, y: y, a: a, len: len, t: 0, life: 0.16 });
+  var len = 260, ux = Math.cos(a), uy = Math.sin(a); B.fx.push({ k: 'dbeam', x: x, y: y, a: a, len: len, t: 0, life: 0.16 });
   near(x + ux * len / 2, y + uy * len / 2, len / 2 + 30, function (e) { var rx = e.x - x, ry = e.y - y, al = rx * ux + ry * uy; if (al > 0 && al < len && Math.abs(-rx * uy + ry * ux) < 8 + e.r) hurt(e, dm, 30, ux, uy); });
 }
 // 매 프레임: 회전 광선·블랙홀
@@ -2693,11 +2694,11 @@ var EVOC = { 10: ['160,220,255', '255,255,255'], 2: ['255,93,143', '255,200,220'
 /* ===== 💥 돌파 스킬 10종: 조합(공격 스킬 Lv5 + 보조 스킬 Lv5)을 완성하면 새로 생기는 공격 =====
    진화와는 따로예요. 슬롯을 차지하지 않고 그 판 끝까지 자동으로 작동해요. */
 var BT = {
-  dart: { n: '별똥별 컴퍼스', e: '☄️', d: '2.4초마다 별똥별 6개가 적 위로 떨어져 터져요' },
+  dart: { n: '별똥별 컴퍼스', e: '☄️', d: '3초마다 별똥별 4개가 적 위로 떨어져 터져요' },
   boom: { n: '나선 원반', e: '🌀', d: '커다란 원반 2개가 나선을 그리며 밖으로 퍼져 나가요' },
   orbit: { n: '동심원 성벽', e: '⭕', d: '4.5초마다 동심원 3개가 솟아 적을 밀어내요' },
   bomb: { n: '거대 원 폭탄', e: '💣', d: '6초마다 적이 가장 많은 곳에 아주 큰 폭탄이 떨어져요' },
-  laser: { n: '방사 광선', e: '✴️', d: '4초마다 8방향 광선이 빙글 돌며 쏘아져요' },
+  laser: { n: '방사 광선', e: '✴️', d: '5초마다 8방향 광선이 빙글 돌며 쏘아져요' },
   aura: { n: '치유의 원판', e: '💗', d: '6초마다 발밑에 원판이 생겨 안에 있으면 회복, 적은 피해' },
   wave: { n: '해일 고리', e: '🌊', d: '5초마다 물방울 고리가 퍼지며 적을 멀리 밀어내요' },
   bolt: { n: '번개 구름', e: '⛈️', d: '구름이 따라다니며 0.45초마다 번개를 떨어뜨려요(옆의 적도 찌릿)' },
@@ -2705,7 +2706,7 @@ var BT = {
   drone: { n: '황금 동전 포탑', e: '🪙', d: '7초마다 동전을 쏘는 포탑을 세워요(최대 2개)' }
 };
 function btGet(a) {
-  var h = B.h; banner('💥 돌파 스킬 획득! ' + BT[a].e + ' 「' + BT[a].n + '」'); beep('lv');
+  var h = B.h; banner('💥 돌파 스킬 획득! ' + BT[a].e + ' 「' + BT[a].n + '」'); beep('lv'); setTimeout(function () { if (B) toast('👾 내가 강해진 만큼 적들도 더 강해졌어요!', 2); }, 1600);
   B.fx.push({ k: 'evoflash', x: h.x, y: h.y, t: 0, life: 1.1 }); B.btT = B.btT || {}; B.btT[a] = 0.5; hudSkills();
 }
 function onScreen() { var h = B.h, hw = VW / 2 / ZOOM, hh = VH / 2 / ZOOM; return B.en.filter(function (e) { return !e.dead && Math.abs(e.x - h.x) < hw && Math.abs(e.y - h.y) < hh; }); }
@@ -2719,12 +2720,12 @@ function btTick(dt) {
   if (!B.bt) return; var h = B.h, A = B.D.atk * (B.rage > 0 ? 2 : 1); B.btT = B.btT || {}; B.btObj = B.btObj || [];
   Object.keys(B.bt).forEach(function (a) { B.btT[a] = (B.btT[a] == null ? 0.5 : B.btT[a]) - dt; });
   var T = B.btT, cdm = B.D.cdm;
-  if (B.bt.dart && T.dart <= 0) { T.dart = 2.4 * cdm; var c = onScreen(); for (var i = 0; i < 6; i++) { var e = c.length ? c[Math.floor(Math.random() * c.length)] : null, x = e ? e.x : h.x + (Math.random() - 0.5) * 300, y = e ? e.y : h.y + (Math.random() - 0.5) * 300;
+  if (B.bt.dart && T.dart <= 0) { T.dart = 3 * cdm; var c = onScreen(); for (var i = 0; i < 4; i++) { var e = c.length ? c[Math.floor(Math.random() * c.length)] : null, x = e ? e.x : h.x + (Math.random() - 0.5) * 300, y = e ? e.y : h.y + (Math.random() - 0.5) * 300;
       B.fx.push({ k: 'meteor', x: x, y: y, t: -i * 0.08, life: 0.35, onEnd: function (f) { B.fx.push({ k: 'boomring', evo: 6, x: f.x, y: f.y, R: 46, t: 0, life: 0.3 }); areaHit(f.x, f.y, 46, A * 2.2, 50); } }); } }
   if (B.bt.boom && T.boom <= 0) { T.boom = 3 * cdm; var a0 = Math.random() * PI2; [0, Math.PI].forEach(function (o2) { B.btObj.push({ k: 'disc', a0: a0 + o2, t: 0, life: 2.4, hit: {}, x: h.x, y: h.y }); }); }
   if (B.bt.orbit && T.orbit <= 0) { T.orbit = 4.5 * cdm; B.fx.push({ k: 'cwall', x: h.x, y: h.y, t: 0, life: 0.55 }); [70, 120, 170].forEach(function (R) { near(h.x, h.y, R + 30, function (e) { var dx = e.x - h.x, dy = e.y - h.y, d = Math.hypot(dx, dy) || 1; if (Math.abs(d - R) < e.r + 14) hurt(e, A * 1.6, 170, dx / d, dy / d); }); }); }
-  if (B.bt.bomb && T.bomb <= 0) { T.bomb = 6 * cdm; var cb = crowd(); if (cb) B.fx.push({ k: 'megawarn', x: cb.x, y: cb.y, R: 150, t: 0, life: 0.6, onEnd: function (f) { B.fx.push({ k: 'boomring', evo: 4, x: f.x, y: f.y, R: f.R, t: 0, life: 0.5 }); beep('boom'); areaHit(f.x, f.y, f.R, A * 5, 140); } }); }
-  if (B.bt.laser && T.laser <= 0) { T.laser = 4 * cdm; B.fx.push({ k: 'radial', x: h.x, y: h.y, a0: Math.random() * PI2, a: 0, len: 420, w: 14, dmg: A * 1.3, hit: {}, t: 0, life: 0.8 }); }
+  if (B.bt.bomb && T.bomb <= 0) { T.bomb = 6 * cdm; var cb = crowd(); if (cb) B.fx.push({ k: 'megawarn', x: cb.x, y: cb.y, R: 150, t: 0, life: 0.6, onEnd: function (f) { B.fx.push({ k: 'boomring', evo: 4, x: f.x, y: f.y, R: f.R, t: 0, life: 0.5 }); beep('boom'); areaHit(f.x, f.y, f.R, A * 4, 140); } }); }
+  if (B.bt.laser && T.laser <= 0) { T.laser = 5 * cdm; B.fx.push({ k: 'radial', x: h.x, y: h.y, a0: Math.random() * PI2, a: 0, len: 300, w: 14, dmg: A * 1.3, hit: {}, t: 0, life: 0.8 }); }
   if (B.bt.aura && T.aura <= 0) { T.aura = 6 * cdm; B.fx.push({ k: 'healzone', x: h.x, y: h.y, R: 90, dmg: A * 0.5, tick: 0, t: 0, life: 4 }); }
   if (B.bt.wave && T.wave <= 0) { T.wave = 5 * cdm; B.fx.push({ k: 'tide', x: h.x, y: h.y, sp: 230, max: 330, dmg: A * 1.8, hit: {}, t: 0, life: 330 / 230 }); }
   if (B.bt.bolt) { B.cloud = B.cloud || { x: h.x, y: h.y - 70 }; B.cloud.x += (h.x - B.cloud.x) * Math.min(1, dt * 4); B.cloud.y += (h.y - 70 - B.cloud.y) * Math.min(1, dt * 4);
